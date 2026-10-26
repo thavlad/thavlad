@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <style>
+    .admin-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; }
+    @media (min-width: 768px) { .admin-grid { grid-template-columns: 1fr 1fr; } }
+    .admin-card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .admin-table th, .admin-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    .stock-input { width: 60px; padding: 4px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h1>⚙️ Admin Dashboard</h1>
+      <span class="status" style="background: #dbeafe; color: #1e40af;">Admin Active</span>
+    </div>
+
+    <!-- Access Denied Message Container -->
+    <div id="denied-box" class="auth-card hidden">
+      <h2 style="color: var(--red);">Access Denied</h2>
+      <p class="muted" style="margin: 10px 0;">You must be logged in as an administrator to view this portal.</p>
+      <a href="login.html" class="btn">Log in as Admin</a>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div id="admin-content" class="hidden">
+      
+      <!-- Top Section: Quick Stats -->
+      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+        <div class="admin-card" style="flex: 1; min-width: 150px;">
+          <div class="muted" style="font-size: 12px;">Total Orders</div>
+          <div id="stat-orders" style="font-size: 24px; font-weight: 700; color: var(--orange);">0</div>
+        </div>
+        <div class="admin-card" style="flex: 1; min-width: 150px;">
+          <div class="muted" style="font-size: 12px;">Total Revenue</div>
+          <div id="stat-revenue" style="font-size: 24px; font-weight: 700; color: #10b981;">₦0</div>
+        </div>
+        <div class="admin-card" style="flex: 1; min-width: 150px;">
+          <div class="muted" style="font-size: 12px;">Catalog Size</div>
+          <div id="stat-products" style="font-size: 24px; font-weight: 700;">0</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        
+        <!-- Manage Customer Orders -->
+        <div class="admin-card">
+          <h2>📦 Store Orders</h2>
+          <div id="admin-orders-list" style="margin-top: 14px;"><p class="muted">Loading orders...</p></div>
+        </div>
+
+        <!-- Inventory & Stock Control -->
+        <div class="admin-card">
+          <h2>🏷️ Product Stock & Catalog</h2>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-products-table">
+                <!-- Dynamically Populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Add New Product Form -->
+          <h3 style="margin-top: 24px; margin-bottom: 10px;">➕ Add New Product</h3>
+          <form class="auth-form" id="add-product-form">
+            <label>Name<input name="name" required placeholder="Product Title"></label>
+            <div style="display: flex; gap: 10px;">
+              <label style="flex: 1;">Price (₦)<input name="price" type="number" required></label>
+              <label style="flex: 1;">Stock<input name="stock" type="number" required value="10"></label>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <label style="flex: 1;">Category
+                <select name="category">
+                  <option value="electronics">Electronics</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="home">Home</option>
+                  <option value="beauty">Beauty</option>
+                  <option value="groceries">Groceries</option>
+                  <option value="sports">Sports</option>
+                </select>
+              </label>
+              <label style="flex: 1;">Emoji Icon<input name="emoji" value="📦" required></label>
+            </div>
+            <label>Description<input name="desc" placeholder="Brief summary..."></label>
+            <button class="btn btn-block" type="submit">Publish Product</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <!-- Included Standard JS Scripts -->
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+
+  <script>
+    (async function () {
+      initLayout();
+
+      const contentBox = document.getElementById('admin-content');
+      const deniedBox = document.getElementById('denied-box');
+
+      // 1. Verify Authorization
+      try {
+        await API.admin.check();
+        contentBox.classList.remove('hidden');
+      } catch (err) {
+        deniedBox.classList.remove('hidden');
+        return;
+      }
+
+      // 2. Load Dashboard Data
+      async function reloadDashboard() {
+        const orders = await API.admin.listAllOrders();
+        const products = await API.listProducts();
+
+        // Update Stats
+        document.getElementById('stat-orders').textContent = orders.length;
+        document.getElementById('stat-products').textContent = products.length;
+        const totalRev = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+        document.getElementById('stat-revenue').textContent = fmt(totalRev);
+
+        // Render Orders
+        const ordersContainer = document.getElementById('admin-orders-list');
+        if (orders.length === 0) {
+          ordersContainer.innerHTML = '<p class="muted">No orders placed yet.</p>';
+        } else {
+          ordersContainer.innerHTML = orders.map(o => `
+            <div class="order-card" style="border: 1px solid var(--border);">
+              <div>
+                <strong>Order #${esc(o.id)}</strong><br>
+                <span class="muted" style="font-size:12px;">Total: ${fmt(o.total)}</span>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <select style="font-size: 12px; padding: 4px;" onchange="updateOrderStatus('${o.id}', this.value)">
+                  <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                  <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                  <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                </select>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Render Products Table
+        const prodTable = document.getElementById('admin-products-table');
+        prodTable.innerHTML = products.map(p => `
+          <tr>
+            <td>${p.emoji} <strong>${esc(p.name)}</strong></td>
+            <td>${fmt(p.price)}</td>
+            <td>
+              <input class="stock-input" type="number" value="${p.stock}" onchange="updateProductStock(${p.id}, this.value)">
+            </td>
+            <td>
+              <button style="background:none; border:none; color:var(--red); cursor:pointer;" onclick="deleteProduct(${p.id})">🗑️</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // 3. Exposed Handlers
+      window.updateOrderStatus = async (id, status) => {
+        await API.admin.updateOrderStatus(id, status);
+        toast('Order status updated');
+      };
+
+      window.updateProductStock = async (id, stock) => {
+        await API.admin.updateStock(id, stock);
+        toast('Stock level updated');
+      };
+
+      window.deleteProduct = async (id) => {
+        if (confirm('Delete this product from store catalog?')) {
+          await API.admin.deleteProduct(id);
+          toast('Product deleted');
+          reloadDashboard();
+        }
+      };
+
+      // Add Product Form Handler
+      document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = Object.fromEntries(fd.entries());
+        
+        try {
+          await API.admin.addProduct(data);
+          toast('Product added successfully!');
+          e.target.reset();
+          reloadDashboard();
+        } catch (err) {
+          toast(err.message);
+        }
+      });
+
+      // Initial Load
+      reloadDashboard();
+    })();
+  </script>
+</body>
+</html>
