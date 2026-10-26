@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Store (Prototype)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #222; }
+  header { background: #f68b1e; color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  header h1 { margin: 0; font-size: 24px; }
+  .cart-btn { background: white; color: #f68b1e; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+  .notice { background: #fff3cd; padding: 10px; text-align: center; font-size: 14px; }
+  .search { padding: 16px; }
+  .search input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; padding: 0 16px 16px; }
+  .card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .img { font-size: 60px; }
+  .name { font-weight: bold; margin: 8px 0 4px; }
+  .price { color: #f68b1e; font-weight: bold; font-size: 18px; }
+  .card button { margin-top: 10px; width: 100%; background: #222; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; }
+  .cart-panel { display: none; background: white; margin: 16px; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .cart-panel.open { display: block; }
+  .cart-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+  .total { font-weight: bold; font-size: 18px; margin-top: 12px; text-align: right; }
+  .checkout { width: 100%; margin-top: 12px; background: #f68b1e; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; cursor: pointer; }
+  .message { text-align: center; color: green; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>My Store</h1>
+  <button class="cart-btn" onclick="toggleCart()">Cart (<span id="count">0</span>)</button>
+</header>
+
+<div class="notice">Prototype only. No real orders or payments.</div>
+
+<div class="search">
+  <input type="text" id="search" placeholder="Search products..." oninput="renderProducts()">
+</div>
+
+<div class="cart-panel" id="cartPanel">
+  <h2>Your Cart</h2>
+  <div id="cartItems"></div>
+  <div class="total">Total: $<span id="total">0</span></div>
+  <button class="checkout" onclick="checkout()">Checkout</button>
+  <div class="message" id="message"></div>
+</div>
+
+<div class="grid" id="products"></div>
+
+<script>
+  // To change products, edit the names, prices, and emoji below.
+  const products = [
+    { id: 1, name: "Sneakers", price: 45, image: "👟" },
+    { id: 2, name: "Backpack", price: 30, image: "🎒" },
+    { id: 3, name: "Smartwatch", price: 80, image: "⌚" },
+    { id: 4, name: "Headphones", price: 60, image: "🎧" },
+    { id: 5, name: "Sunglasses", price: 25, image: "🕶️" },
+    { id: 6, name: "Coffee Mug", price: 12, image: "☕" }
+  ];
+
+  let cart = [];
+
+  function renderProducts() {
+    const term = document.getElementById("search").value.toLowerCase();
+    const list = document.getElementById("products");
+    list.innerHTML = "";
+    products
+      .filter(p => p.name.toLowerCase().includes(term))
+      .forEach(p => {
+        list.innerHTML += `
+          <div class="card">
+            <div class="img">${p.image}</div>
+            <div class="name">${p.name}</div>
+            <div class="price">$${p.price}</div>
+            <button onclick="addToCart(${p.id})">Add to cart</button>
+          </div>`;
+      });
+  }
+
+  function addToCart(id) {
+    const product = products.find(p => p.id === id);
+    cart.push(product);
+    updateCart();
+  }
+
+  function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCart();
+  }
+
+  function updateCart() {
+    document.getElementById("count").textContent = cart.length;
+    const items = document.getElementById("cartItems");
+    items.innerHTML = cart.length === 0 ? "<p>Your cart is empty.</p>" : "";
+    cart.forEach((item, i) => {
+      items.innerHTML += `
+        <div class="cart-row">
+          <span>${item.name} - $${item.price}</span>
+          <a href="#" onclick="removeFromCart(${i}); return false;">Remove</a>
+        </div>`;
+    });
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    document.getElementById("total").textContent = total;
+    document.getElementById("message").textContent = "";
+  }
+
+  function toggleCart() {
+    document.getElementById("cartPanel").classList.toggle("open");
+  }
+
+  function checkout() {
+    if (cart.length === 0) {
+      document.getElementById("message").textContent = "Add something to your cart first.";
+      return;
+    }
+    cart = [];
+    updateCart();
+    document.getElementById("message").textContent = "Demo order placed! (No real payment was taken.)";
+  }
+
+  renderProducts();
+  updateCart();
+</script>
+
+</body>
+</html>
