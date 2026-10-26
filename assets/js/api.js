@@ -24,15 +24,16 @@ const API = (() => {
     throw err;
   };
 
-  // The "database": seeded once from SEED_PRODUCTS.
+  // The "database": seeded once from SEED_PRODUCTS and pre-populated user accounts.
   function db() {
     let d = read(DB_KEY, null);
     if (!d) {
       d = {
         products: SEED_PRODUCTS.map(p => ({ ...p })),
-        // Demo users including admin account
         users: [
+          // Demo customer account
           { id: 'u_demo', name: 'Ada Okafor', email: 'demo@shopng.ng', password: 'password123' },
+          // Store Administrator account
           { id: 'u_admin', name: 'Store Admin', email: 'admin@shopng.ng', password: 'password123' }
         ],
         orders: []
@@ -41,6 +42,7 @@ const API = (() => {
     }
     return d;
   }
+
   const saveDb = d => write(DB_KEY, d);
   const publicUser = u => ({ id: u.id, name: u.name, email: u.email });
 
@@ -214,6 +216,7 @@ const API = (() => {
 
   // ---------- ADMIN EXTENSIONS ----------
   const admin = {
+    // Verifies administrator session rights
     async check() {
       await wait();
       const user = auth.current();
@@ -222,10 +225,14 @@ const API = (() => {
       }
       return user;
     },
+
+    // Retrieve all customer orders across the platform
     async listAllOrders() {
       await this.check();
       return db().orders;
     },
+
+    // Update fulfillment status & tracking number for an order
     async updateOrderStatus(orderId, status, tracking) {
       await this.check();
       const d = db();
@@ -236,6 +243,8 @@ const API = (() => {
       saveDb(d);
       return order;
     },
+
+    // Modify inventory stock count for a specific product
     async updateStock(productId, newStock) {
       await this.check();
       const d = db();
@@ -245,6 +254,8 @@ const API = (() => {
       saveDb(d);
       return product;
     },
+
+    // Add a new product into store catalog
     async addProduct(productData) {
       await this.check();
       const d = db();
@@ -267,6 +278,8 @@ const API = (() => {
       saveDb(d);
       return newProduct;
     },
+
+    // Remove a product from store catalog
     async deleteProduct(productId) {
       await this.check();
       const d = db();
