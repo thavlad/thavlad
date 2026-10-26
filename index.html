@@ -1,313 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shop</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --orange: #E8600C;
-    --orange-soft: #FDDCC6;
-    --chip: #F0F0F0;
-    --text: #2A2A2A;
-  }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #EDEDED;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    color: var(--text);
-  }
-  button { font-family: inherit; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>ShopNG - Popular in Lagos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: 80px;
+    }
 
-  .phone {
-    width: 430px;
-    height: 932px;
-    background: #fff;
-    border-radius: 44px;
-    box-shadow: 0 12px 40px rgba(0,0,0,.12);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  @media (max-width: 480px) {
-    body { padding: 0; }
-    .phone { width: 100%; height: 100vh; border-radius: 0; box-shadow: none; }
-  }
+    /* Header */
+    .header {
+      background: white;
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .search {
+      flex: 1;
+      background: #fff;
+      border: 1.5px solid #f97316;
+      border-radius: 50px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    .search input {
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 14px;
+      background: transparent;
+    }
+    .cart-btn {
+      background: #f97316;
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: none;
+    }
 
-  .status {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 20px 30px 4px;
-    font-size: 17px; font-weight: 600;
-  }
-  .status .icons { display: flex; gap: 7px; align-items: center; }
+    /* Sections */
+    .section {
+      padding: 16px;
+      background: white;
+      margin-bottom: 8px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .section-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .see-all {
+      color: #f97316;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+    }
 
-  .content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 18px 110px;
-    scrollbar-width: none;
-  }
-  .content::-webkit-scrollbar { display: none; }
+    /* Categories */
+    .categories {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .categories::-webkit-scrollbar { display: none; }
+    .cat {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border-radius: 50px;
+      background: #f3f4f6;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .cat.active {
+      background: #f97316;
+      color: white;
+    }
 
-  /* Location card */
-  .location {
-    display: flex;
-    height: 150px;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 4px 18px rgba(0,0,0,.08);
-    overflow: hidden;
-  }
-  .location-text {
-    flex: 1;
-    display: flex; align-items: center; gap: 12px;
-    padding: 0 16px 0 22px;
-    font-size: 17px; line-height: 1.3; color: #333;
-  }
-  .map { width: 46%; }
-  .map svg { width: 100%; height: 100%; display: block; }
+    /* Product Grid */
+    .products {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      position: relative;
+    }
+    .heart {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      color: #d1d5db;
+      font-size: 18px;
+    }
+    .product-img {
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      margin-bottom: 8px;
+    }
+    .product-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .rating {
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .price {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f97316;
+    }
+    .delivery {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
 
-  /* Search */
-  .search-row { display: flex; gap: 12px; margin-top: 18px; }
-  .search {
-    flex: 1; height: 52px;
-    display: flex; align-items: center; gap: 10px;
-    padding: 0 14px;
-    background: var(--orange-soft);
-    border: 2px solid var(--orange);
-    border-radius: 14px;
-    box-shadow: 0 6px 16px rgba(232,96,12,.18);
-  }
-  .search input {
-    flex: 1; min-width: 0;
-    border: none; background: transparent; outline: none;
-    font-size: 16px; color: #333;
-  }
-  .search input::placeholder { color: #555; }
-  .search svg { width: 24px; height: 24px; flex: none; }
-  .filter-btn {
-    width: 52px; height: 52px; flex: 0 0 52px;
-    border: none; border-radius: 14px;
-    background: var(--orange); color: #fff;
-    display: grid; place-items: center; cursor: pointer;
-  }
-
-  .section-head {
-    display: flex; justify-content: space-between; align-items: center;
-    margin: 26px 2px 14px;
-  }
-  .section-head h2 { font-size: 22px; font-weight: 600; }
-  .section-head a { color: var(--orange); font-size: 17px; text-decoration: none; }
-
-  /* Category chips */
-  .chips {
-    display: flex; gap: 10px;
-    overflow-x: auto; scrollbar-width: none;
-    margin: 0 -18px; padding: 0 18px;
-  }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip {
-    flex: 0 0 auto;
-    display: flex; align-items: center; gap: 8px;
-    padding: 13px 16px;
-    border: none; border-radius: 16px;
-    background: var(--chip);
-    color: #333; font-size: 16px; cursor: pointer;
-  }
-  .chip svg { width: 20px; height: 20px; flex: none; }
-  .chip.active { background: var(--orange); color: #fff; }
-
-  /* Product grid */
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .card {
-    position: relative;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 4px 16px rgba(0,0,0,.09);
-    padding: 12px 8px 10px;
-    text-align: center;
-  }
-  .fav {
-    position: absolute; top: 10px; right: 10px;
-    border: none; background: none; cursor: pointer; color: var(--orange);
-  }
-  .fav svg { width: 24px; height: 24px; display: block; }
-  .fav.on svg { fill: var(--orange); }
-  .thumb { height: 112px; display: flex; align-items: center; justify-content: center; }
-  .thumb svg { width: 112px; height: 112px; }
-  .card h3 { font-size: 16px; font-weight: 500; margin-top: 4px; }
-  .rating {
-    font-size: 14px; color: #333; margin-top: 4px;
-    display: flex; justify-content: center; align-items: center; gap: 4px;
-  }
-  .rating svg { width: 15px; height: 15px; }
-  .price { color: var(--orange); font-weight: 700; font-size: 17px; margin-top: 4px; }
-  .ship { font-size: 13px; color: #222; margin-top: 1px; }
-
-  /* Bottom navigation */
-  .nav {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    height: 92px;
-    background: #fff;
-    border-radius: 26px 26px 0 0;
-    box-shadow: 0 -6px 20px rgba(0,0,0,.08);
-    display: flex; justify-content: space-around; align-items: flex-start;
-    padding-top: 12px;
-  }
-  .nav button {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    border: none; background: none; color: #777;
-    font-size: 14px; cursor: pointer; width: 25%;
-  }
-  .nav button svg { width: 30px; height: 30px; }
-  .nav button.active { color: var(--orange); }
-</style>
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 16px;
+      border-top: 1px solid #e5e7eb;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #9ca3af;
+      text-decoration: none;
+    }
+    .nav-item.active {
+      color: #f97316;
+    }
+    .nav-item span {
+      font-size: 22px;
+    }
+  </style>
 </head>
 <body>
-<div class="phone">
+  <!-- Header -->
+  <div class="header">
+    <div class="search">
+      <span>🔍</span>
+      <input type="text" placeholder="Search for products, brands, categories...">
+    </div>
+    <button class="cart-btn">🛒</button>
+  </div>
 
-  <div class="status">
-    <span>9:41</span>
-    <div class="icons">
-      <svg width="20" height="13" viewBox="0 0 22 14" fill="#111"><rect x="0" y="9" width="4" height="5" rx="1"/><rect x="6" y="6" width="4" height="8" rx="1"/><rect x="12" y="3" width="4" height="11" rx="1"/><rect x="18" y="0" width="4" height="14" rx="1"/></svg>
-      <svg width="18" height="13" viewBox="0 0 24 18" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round"><path d="M2 7a14.5 14.5 0 0 1 20 0"/><path d="M6 11.5a8.5 8.5 0 0 1 12 0"/><circle cx="12" cy="15.5" r="1.8" fill="#111" stroke="none"/></svg>
-      <svg width="28" height="13" viewBox="0 0 28 13"><rect x=".5" y=".5" width="23" height="12" rx="3" fill="none" stroke="#111"/><rect x="2.5" y="2.5" width="19" height="8" rx="1.5" fill="#111"/><rect x="25" y="4" width="2" height="5" rx="1" fill="#111"/></svg>
+  <!-- Categories -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Categories</h2>
+      <a href="#" class="see-all">See all</a>
+    </div>
+    <div class="categories">
+      <div class="cat active">📱 Electronics</div>
+      <div class="cat">👕 Fashion</div>
+      <div class="cat">🛋️ Home</div>
+      <div class="cat">💄 Beauty</div>
+      <div class="cat">🛒 Groceries</div>
+      <div class="cat">⚽ Sports</div>
     </div>
   </div>
 
-  <div class="content">
+  <!-- Popular in Lagos -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Popular in Lagos</h2>
+      <a href="#" class="see-all">See all</a>
+    </div>
 
-    <div class="location">
-      <div class="location-text">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E8600C" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
-        <span>Delivering to —<br>New York, NY</span>
+    <div class="products">
+      <!-- Product 1 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">🎧</div>
+        <div class="product-name">Wireless Headphones</div>
+        <div class="rating">⭐ 4.6 · 120 sold</div>
+        <div class="price">₦67,500</div>
+        <div class="delivery">FREE delivery</div>
       </div>
-      <div class="map">
-        <svg viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">
-          <rect width="300" height="260" fill="#F4F4F2"/>
-          <path d="M0 0H92Q104 130 80 260H0Z" fill="#8ED0F2"/>
-          <path d="M238 0H300V260H212Q256 150 238 0Z" fill="#8ED0F2"/>
-          <rect x="128" y="44" width="46" height="84" fill="#C9E8B8"/>
-          <g stroke="#E0E0E0" stroke-width="3" fill="none">
-            <path d="M100 0V260M140 0V40M180 0V260M210 0V110M20 40H238M20 150H200M30 210H190"/>
-          </g>
-          <path d="M190 0L118 240" stroke="#BDBDBD" stroke-width="5"/>
-          <path d="M124 60L210 10" stroke="#7A7A7A" stroke-width="4"/>
-          <g font-family="sans-serif" font-size="14" fill="#222">
-            <text x="150" y="22" text-anchor="middle">Brooklyn Bridge</text>
-            <text x="148" y="100" text-anchor="middle">Central Park</text>
-            <text x="228" y="72">Brooklyn</text>
-            <text transform="translate(54 150) rotate(68)" fill="#2D7AB0">Hudson River</text>
-            <text transform="translate(252 186) rotate(-68)" fill="#2D7AB0">East River</text>
-            <text x="150" y="252" text-anchor="middle">Statue of Liberty</text>
-          </g>
-        </svg>
+
+      <!-- Product 2 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">👟</div>
+        <div class="product-name">Running Sneakers</div>
+        <div class="rating">⭐ 4.5 · 98 sold</div>
+        <div class="price">₦83,700</div>
+        <div class="delivery">FREE delivery</div>
+      </div>
+
+      <!-- Product 3 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">🧴</div>
+        <div class="product-name">Insulated Water Bottle</div>
+        <div class="rating">⭐ 4.7 · 210 sold</div>
+        <div class="price">₦25,000</div>
+        <div class="delivery">Express · Lagos</div>
+      </div>
+
+      <!-- Product 4 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">☕</div>
+        <div class="product-name">Coffee Maker 4-Cup</div>
+        <div class="rating">⭐ 4.4 · 76 sold</div>
+        <div class="price">₦47,200</div>
+        <div class="delivery">FREE delivery</div>
+      </div>
+
+      <!-- Product 5 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">🎒</div>
+        <div class="product-name">Everyday Backpack</div>
+        <div class="rating">⭐ 4.6 · 150 sold</div>
+        <div class="price">₦40,500</div>
+        <div class="delivery">FREE delivery</div>
+      </div>
+
+      <!-- Product 6 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">⌚</div>
+        <div class="product-name">Smart Watch</div>
+        <div class="rating">⭐ 4.5 · 92 sold</div>
+        <div class="price">₦79,700</div>
+        <div class="delivery">Express · Lagos</div>
+      </div>
+
+      <!-- Product 7 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">✨</div>
+        <div class="product-name">Skincare Set</div>
+        <div class="rating">⭐ 4.8 · 64 sold</div>
+        <div class="price">₦29,700</div>
+        <div class="delivery">FREE delivery</div>
+      </div>
+
+      <!-- Product 8 -->
+      <div class="card">
+        <div class="heart">♡</div>
+        <div class="product-img">💡</div>
+        <div class="product-name">LED Desk Lamp</div>
+        <div class="rating">⭐ 4.6 · 88 sold</div>
+        <div class="price">₦36,400</div>
+        <div class="delivery">Express · Lagos</div>
       </div>
     </div>
-
-    <div class="search-row">
-      <label class="search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#E8600C" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-        <input type="text" placeholder="Search for products, brands, categories...">
-      </label>
-      <button class="filter-btn" aria-label="Filters">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-      </button>
-    </div>
-
-    <div class="section-head"><h2>Categories</h2><a href="#">See all</a></div>
-    <div class="chips" id="chips">
-      <button class="chip active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>Electronics</button>
-      <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 3.5 4 6l1.5 4L7.5 9.5V20.5h9V9.5L18.5 10 20 6l-4-2.5c-.8 1.6-2.2 2.5-4 2.5S8.8 5.1 8 3.5z"/></svg>Fashion</button>
-      <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11V8.5A2.5 2.5 0 0 1 6.5 6h11A2.5 2.5 0 0 1 20 8.5V11"/><path d="M2.5 11.5h19v5h-19z"/><path d="M5 16.5V19M19 16.5V19"/></svg>Home</button>
-      <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 4l1.5 4L14.5 9.5 10.5 11 9 15l-1.5-4L3.5 9.5 7.5 8z"/><path d="M17 13l.9 2.1L20 16l-2.1.9L17 19l-.9-2.1L14 16l2.1-.9z"/></svg>Beauty</button>
-      <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-2.2 9H5.2z"/><path d="M8 10l4-6 4 6M9.5 14v3M14.5 14v3"/></svg>Groceries</button>
-      <button class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8v8M18 8v8M2.5 10.5v3M21.5 10.5v3M6 12h12"/></svg>Sports</button>
-    </div>
-
-    <div class="section-head"><h2>Popular in NYC</h2><a href="#">See all</a></div>
-    <div class="grid" id="grid"></div>
-
   </div>
 
-  <nav class="nav" id="nav">
-    <button class="active">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11L12 3l9 8v10h-6v-6H9v6H3z"/></svg>Home
-    </button>
-    <button>
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11L12 3l9 8v10h-6v-6H9v6H3z"/></svg>Categories
-    </button>
-    <button>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 4h3l2.4 10.5h10.6L21 7H7.2"/><circle cx="9" cy="19" r="1.6" fill="currentColor"/><circle cx="17" cy="19" r="1.6" fill="currentColor"/></svg>Cart
-    </button>
-    <button>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4.5"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account
-    </button>
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active">
+      <span>🏠</span>
+      Home
+    </a>
+    <a href="#" class="nav-item">
+      <span>📂</span>
+      Categories
+    </a>
+    <a href="#" class="nav-item">
+      <span>🛒</span>
+      Cart
+    </a>
+    <a href="#" class="nav-item">
+      <span>👤</span>
+      Account
+    </a>
   </nav>
-
-</div>
-
-<script>
-  const art = {
-    headphones: '<path d="M22 58V46a28 28 0 0 1 56 0v12" fill="none" stroke="#222" stroke-width="7"/><rect x="12" y="52" width="20" height="32" rx="9" fill="#222"/><rect x="68" y="52" width="20" height="32" rx="9" fill="#222"/>',
-    sneakers: '<path d="M4 72Q6 56 24 56L36 48Q44 46 48 56L50 72Z" fill="#fff" stroke="#bdbdbd" stroke-width="2"/><path d="M44 70Q46 52 62 52L76 42Q86 42 90 54L96 70Z" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="2"/><path d="M4 74H50M44 72H96" stroke="#c4c4c4" stroke-width="4" stroke-linecap="round"/>',
-    bottle: '<rect x="41" y="6" width="18" height="10" rx="3" fill="#777"/><rect x="38" y="14" width="24" height="82" rx="10" fill="#c3c7cc" stroke="#9aa0a6" stroke-width="1.5"/><rect x="44" y="26" width="4" height="60" rx="2" fill="#eef0f2"/>',
-    coffee: '<rect x="30" y="8" width="40" height="34" rx="5" fill="#1d1d1d"/><rect x="36" y="2" width="28" height="8" rx="3" fill="#2b2b2b"/><rect x="58" y="44" width="34" height="44" rx="6" fill="#cfd8dc" opacity=".6" stroke="#8a969c" stroke-width="2"/><rect x="28" y="86" width="44" height="10" rx="3" fill="#1d1d1d"/>',
-    backpack: '<path d="M38 18Q38 8 50 8Q62 8 62 18" fill="none" stroke="#3d4a2f" stroke-width="5"/><rect x="24" y="16" width="52" height="80" rx="14" fill="#4b5a3b"/><rect x="30" y="44" width="40" height="28" rx="6" fill="#3e4c30"/><rect x="45" y="52" width="10" height="6" rx="2" fill="#2c3622"/>',
-    watch: '<rect x="37" y="2" width="26" height="24" rx="5" fill="#2a2a2a"/><rect x="37" y="74" width="26" height="24" rx="5" fill="#2a2a2a"/><rect x="26" y="22" width="48" height="56" rx="14" fill="#1c1c1c" stroke="#444" stroke-width="2"/><rect x="32" y="28" width="36" height="44" rx="10" fill="#111"/><path d="M50 40V50L57 55" fill="none" stroke="#888" stroke-width="2"/>',
-    skincare: '<rect x="16" y="30" width="16" height="56" rx="4" fill="#f3ede4" stroke="#b9ab97"/><rect x="20" y="16" width="8" height="14" rx="2" fill="#bdbdbd"/><rect x="41" y="54" width="36" height="24" rx="4" fill="#efe8dc" stroke="#b9ab97"/><rect x="41" y="46" width="36" height="10" rx="3" fill="#d5d5d5"/>',
-    lamp: '<ellipse cx="46" cy="92" rx="22" ry="5" fill="#8b5e3c"/><path d="M46 88L30 52L62 38" fill="none" stroke="#8b5e3c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M56 38L78 20L86 36L64 50Z" fill="#b07a4f"/>'
-  };
-
-  const products = [
-    { name: 'Wireless Headphones',    rating: 4.6, sold: 120, price: 49.99, ship: 'FREE delivery', art: 'headphones', star: true, heart: true },
-    { name: 'Running Sneakers',       rating: 4.5, sold: 98,  price: 62.00, ship: 'FREE delivery', art: 'sneakers', heart: true },
-    { name: 'Insulated Water Bottle', rating: 4.7, sold: 210, price: 18.50, ship: 'Prime • NYC',   art: 'bottle' },
-    { name: 'Coffee Maker 4-Cup',     rating: 4.4, sold: 76,  price: 34.99, ship: 'FREE delivery', art: 'coffee' },
-    { name: 'Everyday Backpack',      rating: 4.6, sold: 150, price: 29.99, ship: 'FREE delivery', art: 'backpack' },
-    { name: 'Smart Watch',            rating: 4.5, sold: 92,  price: 59.00, ship: 'Prime • NYC',   art: 'watch' },
-    { name: 'Skincare Set',           rating: 4.8, sold: 64,  price: 22.00, ship: 'FREE delivery', art: 'skincare' },
-    { name: 'LED Desk Lamp',          rating: 4.6, sold: 88,  price: 26.99, ship: 'Prime • NYC',   art: 'lamp' }
-  ];
-
-  const heartIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.8a4.3 4.3 0 0 1 7.5 2.7c0 5.4-7.5 10-7.5 10z"/></svg>';
-  const starIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/></svg>';
-
-  const grid = document.getElementById('grid');
-  grid.innerHTML = products.map(p => `
-    <div class="card">
-      ${p.heart ? `<button class="fav" aria-label="Save">${heartIcon}</button>` : ''}
-      <div class="thumb"><svg viewBox="0 0 100 100">${art[p.art]}</svg></div>
-      <h3>${p.name}</h3>
-      <div class="rating">${p.star ? starIcon : ''}<span>${p.rating} • ${p.sold} sold</span></div>
-      <div class="price">$${p.price.toFixed(2)}</div>
-      <div class="ship">${p.ship}</div>
-    </div>`).join('');
-
-  grid.addEventListener('click', e => {
-    const fav = e.target.closest('.fav');
-    if (fav) fav.classList.toggle('on');
-  });
-
-  document.getElementById('chips').addEventListener('click', e => {
-    const chip = e.target.closest('.chip');
-    if (!chip) return;
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-  });
-
-  document.getElementById('nav').addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-</script>
 </body>
 </html>
