@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Store Name</title>
+<style>
+  :root { --ink:#1d1d1f; --muted:#6b6b70; --line:#e5e5ea; --accent:#0a7d4f; --bg:#fafafa; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:#fff; border-bottom:1px solid var(--line); padding:14px 16px; position:sticky; top:0; z-index:1; }
+  .brand { font-weight:700; font-size:1.25rem; text-decoration:none; color:var(--ink); }
+  nav { display:flex; gap:8px; overflow-x:auto; margin-top:10px; }
+  nav a { white-space:nowrap; padding:6px 12px; border:1px solid var(--line); border-radius:999px; text-decoration:none; color:var(--ink); font-size:.9rem; background:#fff; }
+  nav a.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+  main { max-width:1100px; margin:0 auto; padding:16px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:14px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; text-decoration:none; color:inherit; display:flex; flex-direction:column; }
+  .thumb { aspect-ratio:1/1; background:#f0f0f3; display:flex; align-items:center; justify-content:center; font-size:2.5rem; color:#b5b5bd; }
+  .thumb img { width:100%; height:100%; object-fit:cover; }
+  .card .body { padding:10px 12px 14px; }
+  .name { font-weight:600; font-size:.95rem; margin:0 0 4px; }
+  .price { font-weight:700; color:var(--accent); }
+  .muted { color:var(--muted); font-size:.85rem; }
+  .product { display:grid; gap:20px; }
+  @media (min-width:700px) { .product { grid-template-columns: 1fr 1fr; } }
+  .product .thumb { border-radius:12px; }
+  .product h1 { margin:0 0 8px; font-size:1.6rem; }
+  .product .price { font-size:1.4rem; margin-bottom:10px; }
+  .stock { margin:12px 0; font-size:.95rem; }
+  .out { color:#b42318; }
+  .back { display:inline-block; margin-bottom:12px; color:var(--muted); text-decoration:none; }
+  .status { padding:40px 0; text-align:center; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" id="brand" href="#/">Your Store Name</a>
+  <nav id="categories"></nav>
+</header>
+<main id="app"><p class="status">Loading…</p></main>
+
+<script>
+  // ---- Paste your values from Supabase: Project Settings → API ----
+  const SUPABASE_URL = 'PASTE_PROJECT_URL_HERE';
+  const SUPABASE_ANON_KEY = 'PASTE_ANON_PUBLIC_KEY_HERE';
+  const STORE_NAME = 'Your Store Name';
+
+  const PRODUCT_FIELDS = 'id,name,slug,description,price_kobo,stock_qty,categories(name,slug),product_images(url,position)';
+  const app = document.getElementById('app');
+  let categories = [];
+  let products = [];
+
+  const money = kobo => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(kobo / 100);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  async function api(path) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) throw new Error(`Could not load data (error ${res.status})`);
+    return res.json();
+  }
+
+  function thumb(p) {
+    const imgs = [...(p.product_images || [])].sort((a, b) => a.position - b.position);
+    const inner = imgs.length
+      ? `<img src="${esc(imgs[0].url)}" alt="${esc(p.name)}">`
+      : esc(p.name.charAt(0).toUpperCase());
+    return `<div class="thumb">${inner}</div>`;
+  }
+
+  function renderNav(activeSlug) {
+    document.getElementById('categories').innerHTML =
+      `<a href="#/" class="${activeSlug ? '' : 'active'}">All</a>` +
+      categories.map(c => `<a href="#/category/${esc(c.slug)}" class="${c.slug === activeSlug ? 'active' : ''}">${esc(c.name)}</a>`).join('');
+  }
+
+  function renderList(list, title) {
+    app.innerHTML = `
+      <h2 style="margin-top:0">${esc(title)}</h2>
+      ${list.length === 0 ? '<p class="status">No products here yet.</p>' : `
+        <div class="grid">
+          ${list.map(p => `
+            <a class="card" href="#/product/${esc(p.slug)}">
+              ${thumb(p)}
+              <div class="body">
+                <p class="name">${esc(p.name)}</p>
+                <div class="price">${money(p.price_kobo)}</div>
+              </div>
+            </a>`).join('')}
+        </div>`}`;
+  }
+
+  function renderProduct(p) {
+    const stock = p.stock_qty > 5 ? 'In stock'
+      : p.stock_qty > 0 ? `Only ${p.stock_qty} left`
+      : '<span class="out">Out of stock</span>';
+    app.innerHTML = `
+      <a class="back" href="#/">← Back to all products</a>
+      <div class="product">
+        ${thumb(p)}
+        <div>
+          <h1>${esc(p.name)}</h1>
+          <div class="price">${money(p.price_kobo)}</div>
+          <div class="stock">${stock}</div>
+          <p>${esc(p.description || '')}</p>
+          <p class="muted">Category: ${esc(p.categories?.name || 'None')}</p>
+        </div>
+      </div>`;
+  }
+
+  function route() {
+    const [section, slug] = location.hash.replace(/^#\/?/, '').split('/');
+
+    if (section === 'product') {
+      const p = products.find(x => x.slug === slug);
+      renderNav(p?.categories?.slug);
+      if (p) renderProduct(p);
+      else app.innerHTML = '<p class="status">Product not found.</p>';
+    } else if (section === 'category') {
+      const cat = categories.find(c => c.slug === slug);
+      renderNav(slug);
+      renderList(products.filter(p => p.categories?.slug === slug), cat ? cat.name : 'Category');
+    } else {
+      renderNav(null);
+      renderList(products, 'All products');
+    }
+  }
+
+  async function init() {
+    document.title = STORE_NAME;
+    document.getElementById('brand').textContent = STORE_NAME;
+    try {
+      [categories, products] = await Promise.all([
+        api('categories?select=name,slug&order=name.asc'),
+        api(`products?select=${PRODUCT_FIELDS}&order=created_at.desc`)
+      ]);
+      route();
+    } catch (e) {
+      app.innerHTML = `<p class="status">${esc(e.message)}</p>`;
+    }
+    window.addEventListener('hashchange', route);
+  }
+
+  init();
+</script>
+</body>
+</html>
