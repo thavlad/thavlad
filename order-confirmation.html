@@ -3,80 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Confirmation - ShopNG</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Order confirmed – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-  <!-- Site Header container populated by initLayout() -->
   <div id="app-header"></div>
 
-  <main class="container">
-    <div class="confirm" id="confirmation-container">
-      <div class="check">✓</div>
-      <h1>Order Placed Successfully!</h1>
-      <p class="muted" id="order-subtitle">Loading your order details...</p>
-
-      <div class="confirm-items" id="order-details-content">
-        <!-- Dynamically populated items and delivery summary -->
-      </div>
-
-      <div class="actions">
-        <a href="account.html" class="btn">View My Orders</a>
-        <a href="index.html" class="btn btn-block" style="max-width: 200px;">Continue Shopping</a>
-      </div>
-    </div>
+  <main class="container narrow">
+    <div class="confirm" id="confirm"><p class="muted">Loading…</p></div>
   </main>
 
-  <!-- Bottom Navigation container populated by initLayout() -->
-  <div id="app-bottom-nav"></div>
+  <div id="app-nav"></div>
 
-  <!-- Include your shared API, helpers, and scripts -->
-  <script src="api.js"></script>
-  <script src="shared.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Initialize site header, bottom navigation, and cart badge
-      initLayout();
+    (async function () {
+      if (!requireLogin()) return;
+      initLayout('account');
 
-      const orderId = param('id');
-      const subtitleEl = document.getElementById('order-subtitle');
-      const contentEl = document.getElementById('order-details-content');
-
-      if (!orderId) {
-        subtitleEl.textContent = 'No order ID provided.';
-        contentEl.innerHTML = '<p class="muted">Please check your order history in your account.</p>';
-        return;
-      }
-
+      const el = document.getElementById('confirm');
       try {
-        // Fetch order details from the mock backend API
-        const order = await API.getOrder(orderId);
-        
-        subtitleEl.innerHTML = `Order Reference: <strong>#${order.id}</strong><br>Tracking Number: <strong>${order.trackingNumber || 'Pending'}</strong>`;
-        
-        let itemsHtml = '<h3>Items Ordered</h3><ul style="list-style: none; padding: 0; margin-top: 10px;">';
-        if (order.items && order.items.length > 0) {
-          order.items.forEach(item => {
-            itemsHtml += `<li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
-              <span>${esc(item.name)} (x${item.qty})</span>
-              <strong>${fmt(item.price * item.qty)}</strong>
-            </li>`;
-          });
-        }
-        itemsHtml += `</ul>`;
-        
-        itemsHtml += `<div style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px;">
-          <div><strong>Delivery Address:</strong> ${esc(order.address)}, ${esc(order.city)}</div>
-          <div><strong>Payment Method:</strong> ${esc(order.payment)}</div>
-          <div style="font-size: 16px; margin-top: 8px;"><strong>Total Paid: ${fmt(order.total)}</strong></div>
-        </div>`;
+        const o = await API.getOrder(param('id'));
+        document.title = `Order #${o.id} – ShopNG`;
+        el.innerHTML = `
+          <div class="check">✓</div>
+          <h1>Thank you for your order!</h1>
+          <p class="muted">Order <strong>#${esc(o.id)}</strong> · <span class="status">${esc(o.status)}</span></p>
 
-        contentEl.innerHTML = itemsHtml;
+          <div class="confirm-items">
+            ${o.items.map(i => `
+              <div class="row"><span>${i.qty} × ${esc(i.name)}</span><span>${fmt(i.price * i.qty)}</span></div>`).join('')}
+            <div class="row"><span>Delivery</span><span>${o.shipping ? fmt(o.shipping) : 'Free'}</span></div>
+            <div class="row total"><span>Total</span><span class="price">${fmt(o.total)}</span></div>
+          </div>
+
+          <p class="muted">
+            Delivering to ${esc(o.address.street)}, ${esc(o.address.city)}.<br>
+            Tracking number: <strong>${esc(o.tracking)}</strong>
+          </p>
+
+          <div class="actions">
+            <a class="btn" href="account.html">View my orders</a>
+            <a class="btn btn-outline" href="index.html">Continue shopping</a>
+          </div>`;
       } catch (err) {
-        subtitleEl.textContent = 'Could not load order details.';
-        contentEl.innerHTML = `<p class="muted">${esc(err.message || 'Order not found or unauthorized.')}</p>`;
+        el.innerHTML = `
+          <p>${esc(err.message)}</p>
+          <div class="actions"><a class="btn" href="account.html">Go to my account</a></div>`;
       }
-    });
+    })();
   </script>
 </body>
 </html>
