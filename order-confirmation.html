@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order confirmed – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container narrow">
+    <div class="confirm" id="confirm"><p class="muted">Loading…</p></div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    (async function () {
+      if (!requireLogin()) return;
+      initLayout('account');
+
+      const el = document.getElementById('confirm');
+      try {
+        const o = await API.getOrder(param('id'));
+        document.title = `Order #${o.id} – ShopNG`;
+        el.innerHTML = `
+          <div class="check">✓</div>
+          <h1>Thank you for your order!</h1>
+          <p class="muted">Order <strong>#${esc(o.id)}</strong> · <span class="status">${esc(o.status)}</span></p>
+
+          <div class="confirm-items">
+            ${o.items.map(i => `
+              <div class="row"><span>${i.qty} × ${esc(i.name)}</span><span>${fmt(i.price * i.qty)}</span></div>`).join('')}
+            <div class="row"><span>Delivery</span><span>${o.shipping ? fmt(o.shipping) : 'Free'}</span></div>
+            <div class="row total"><span>Total</span><span class="price">${fmt(o.total)}</span></div>
+          </div>
+
+          <p class="muted">
+            Delivering to ${esc(o.address.street)}, ${esc(o.address.city)}.<br>
+            Tracking number: <strong>${esc(o.tracking)}</strong>
+          </p>
+
+          <div class="actions">
+            <a class="btn" href="account.html">View my orders</a>
+            <a class="btn btn-outline" href="index.html">Continue shopping</a>
+          </div>`;
+      } catch (err) {
+        el.innerHTML = `
+          <p>${esc(err.message)}</p>
+          <div class="actions"><a class="btn" href="account.html">Go to my account</a></div>`;
+      }
+    })();
+  </script>
+</body>
+</html>

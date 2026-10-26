@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container narrow">
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Log in</button>
+        <button class="tab" data-tab="register">Create account</button>
+      </div>
+
+      <form class="auth-form" id="login-form">
+        <label>Email<input type="email" name="email" required autocomplete="email"></label>
+        <label>Password<input type="password" name="password" required minlength="6" autocomplete="current-password"></label>
+        <button class="btn btn-block" type="submit">Log in</button>
+      </form>
+
+      <form class="auth-form hidden" id="register-form">
+        <label>Full name<input name="name" required autocomplete="name"></label>
+        <label>Email<input type="email" name="email" required autocomplete="email"></label>
+        <label>Password<input type="password" name="password" required minlength="6" autocomplete="new-password"></label>
+        <button class="btn btn-block" type="submit">Create account</button>
+      </form>
+
+      <p class="fine">Demo account: demo@shopng.ng / password123</p>
+    </div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    initLayout('account');
+
+    // Only allow redirects to our own pages (prevents open-redirect abuse).
+    function safeNext(value) {
+      return value && /^[a-z-]+\.html(\?[^\s]*)?$/.test(value) ? value : 'account.html';
+    }
+    const next = safeNext(param('next'));
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+        document.getElementById('login-form').classList.toggle('hidden', tab.dataset.tab !== 'login');
+        document.getElementById('register-form').classList.toggle('hidden', tab.dataset.tab !== 'register');
+      });
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      try {
+        await API.auth.login(f.get('email'), f.get('password'));
+        window.location.href = next;
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    document.getElementById('register-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      try {
+        await API.auth.register({
+          name: f.get('name'),
+          email: f.get('email'),
+          password: f.get('password')
+        });
+        window.location.href = next;
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

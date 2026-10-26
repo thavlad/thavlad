@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container">
+    <nav class="crumbs" id="crumbs"></nav>
+
+    <div class="only-mobile pills-wrap">
+      <div class="pills" id="cat-pills"></div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar only-desktop">
+        <h3>Categories</h3>
+        <div id="cat-side"></div>
+      </aside>
+
+      <section class="main">
+        <div class="listing-head">
+          <h1 id="title"></h1>
+          <p class="muted" id="count"></p>
+        </div>
+
+        <div class="toolbar">
+          <div class="pills" id="price-pills"></div>
+          <select id="sort" aria-label="Sort products">
+            <option value="popular">Most popular</option>
+            <option value="priceAsc">Price: low to high</option>
+            <option value="priceDesc">Price: high to low</option>
+            <option value="rating">Top rated</option>
+          </select>
+        </div>
+
+        <div class="grid" id="grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    initLayout('categories');
+
+    // One template serves categories AND search, just like Jumia's listing pages.
+    const PRICE_CAPS = [[0, 'Any price'], [25000, 'Under ₦25k'], [50000, 'Under ₦50k'], [100000, 'Under ₦100k']];
+    const state = {
+      category: param('cat') || 'all',
+      q: param('q') || '',
+      sort: param('sort') || 'popular',
+      maxPrice: Number(param('max')) || 0
+    };
+
+    function updateUrl() {
+      // Keeps the URL shareable and bookmarkable without reloading the page.
+      const p = new URLSearchParams();
+      if (state.category !== 'all') p.set('cat', state.category);
+      if (state.q) p.set('q', state.q);
+      if (state.sort !== 'popular') p.set('sort', state.sort);
+      if (state.maxPrice) p.set('max', state.maxPrice);
+      history.replaceState(null, '', '?' + p.toString());
+    }
+
+    function renderChrome() {
+      const label = state.q ? `Results for "${state.q}"` : catName(state.category);
+      document.title = label + ' – ShopNG';
+      document.getElementById('title').textContent = label;
+      document.getElementById('crumbs').innerHTML =
+        `<a href="index.html">Home</a> / <span>${esc(label)}</span>`;
+      renderCategoryNav(state.category);
+      document.getElementById('price-pills').innerHTML = PRICE_CAPS.map(([v, text]) =>
+        `<button class="pill ${state.maxPrice === v ? 'active' : ''}" data-max="${v}">${text}</button>`).join('');
+      document.getElementById('sort').value = state.sort;
+    }
+
+    async function load() {
+      renderChrome();
+      updateUrl();
+      try {
+        const list = await API.listProducts({
+          category: state.category, q: state.q, sort: state.sort, maxPrice: state.maxPrice
+        });
+        renderGrid('grid', list);
+        document.getElementById('count').textContent =
+          `${list.length} product${list.length === 1 ? '' : 's'}`;
+      } catch (err) {
+        document.getElementById('grid').innerHTML = `<div class="empty">${esc(err.message)}</div>`;
+      }
+    }
+
+    document.getElementById('sort').addEventListener('change', e => {
+      state.sort = e.target.value;
+      load();
+    });
+    document.getElementById('price-pills').addEventListener('click', e => {
+      const b = e.target.closest('[data-max]');
+      if (!b) return;
+      state.maxPrice = Number(b.dataset.max);
+      load();
+    });
+
+    load();
+  </script>
+</body>
+</html>

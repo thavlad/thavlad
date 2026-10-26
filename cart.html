@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container">
+    <h1 class="page-title">Your Cart</h1>
+    <div class="layout cart-layout">
+      <section id="cart-items"></section>
+      <aside class="summary-box hidden" id="cart-summary"></aside>
+    </div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    initLayout('cart');
+
+    function renderCart() {
+      const lines = API.cart.detailed();
+      const items = document.getElementById('cart-items');
+      const summary = document.getElementById('cart-summary');
+
+      if (lines.length === 0) {
+        items.innerHTML = `
+          <div class="empty">
+            <span>🛒</span>
+            <p>Your cart is empty</p>
+            <a class="btn" href="index.html">Continue Shopping</a>
+          </div>`;
+        summary.classList.add('hidden');
+        return;
+      }
+
+      items.innerHTML = lines.map(l => `
+        <div class="cart-item">
+          <div class="thumb">${l.emoji}</div>
+          <div class="info">
+            <a href="product.html?id=${l.id}"><h4>${esc(l.name)}</h4></a>
+            <div class="price">${fmt(l.price)}</div>
+            <div class="qty-row small">
+              <button class="qty-btn" data-act="dec" data-id="${l.id}" aria-label="Decrease">−</button>
+              <span>${l.qty}</span>
+              <button class="qty-btn" data-act="inc" data-id="${l.id}" aria-label="Increase">+</button>
+            </div>
+          </div>
+          <div class="line">
+            <div class="price">${fmt(l.lineTotal)}</div>
+            <button class="link-danger" data-act="rm" data-id="${l.id}">Remove</button>
+          </div>
+        </div>`).join('');
+
+      const subtotal = API.cart.subtotal();
+      const count = API.cart.count();
+      summary.classList.remove('hidden');
+      summary.innerHTML = `
+        <h3>Order summary</h3>
+        <div class="row"><span>Subtotal (${count} item${count === 1 ? '' : 's'})</span><span>${fmt(subtotal)}</span></div>
+        <div class="row small"><span>Delivery</span><span>Calculated at checkout</span></div>
+        <div class="row total"><span>Total</span><span class="price">${fmt(subtotal)}</span></div>
+        <button class="btn btn-block" id="checkout">Proceed to Checkout</button>
+        <p class="fine">Delivery and payment options are chosen at checkout.</p>`;
+
+      document.getElementById('checkout').onclick = () => {
+        window.location.href = API.auth.current() ? 'checkout.html' : 'login.html?next=checkout.html';
+      };
+    }
+
+    // One listener handles every +, −, and Remove button.
+    document.getElementById('cart-items').addEventListener('click', e => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const id = Number(btn.dataset.id);
+      const line = API.cart.items().find(i => i.id === id);
+      try {
+        if (btn.dataset.act === 'rm') API.cart.remove(id);
+        else if (btn.dataset.act === 'inc') API.cart.setQty(id, line.qty + 1);
+        else API.cart.setQty(id, line.qty - 1);
+      } catch (err) {
+        toast(err.message);
+      }
+      updateCartBadge();
+      renderCart();
+    });
+
+    renderCart();
+  </script>
+</body>
+</html>

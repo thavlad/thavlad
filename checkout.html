@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container">
+    <nav class="crumbs"><a href="cart.html">Cart</a> / <span>Checkout</span></nav>
+    <h1 class="page-title">Checkout</h1>
+
+    <div class="layout cart-layout">
+      <form class="checkout-form" id="checkout-form">
+
+        <section class="card-block">
+          <h2>1. Delivery address</h2>
+          <div class="fields">
+            <label>Full name<input name="name" required autocomplete="name"></label>
+            <label>Phone<input name="phone" type="tel" required placeholder="080..." autocomplete="tel"></label>
+            <label class="full">Street address<input name="address" required autocomplete="street-address"></label>
+            <label>City<input name="city" value="Lagos" required></label>
+          </div>
+        </section>
+
+        <section class="card-block">
+          <h2>2. Delivery method</h2>
+          <div id="shipping-options"></div>
+        </section>
+
+        <section class="card-block">
+          <h2>3. Payment</h2>
+          <label class="option">
+            <input type="radio" name="payment" value="card" checked>
+            <div><strong>Card</strong><span>Visa, Mastercard, Verve</span></div>
+          </label>
+          <label class="option">
+            <input type="radio" name="payment" value="transfer">
+            <div><strong>Bank transfer</strong><span>Pay to a dedicated account</span></div>
+          </label>
+          <label class="option">
+            <input type="radio" name="payment" value="cod">
+            <div><strong>Pay on delivery</strong><span>Cash or POS when your order arrives</span></div>
+          </label>
+        </section>
+
+        <button class="btn btn-block" type="submit" id="place">Place order</button>
+      </form>
+
+      <aside class="summary-box" id="summary"></aside>
+    </div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    (function () {
+      if (!requireLogin()) return;   // logged-out users are redirected to login first
+      initLayout('cart');
+
+      const lines = API.cart.detailed();
+      if (lines.length === 0) {
+        document.querySelector('main').innerHTML = `
+          <div class="empty">
+            <span>🛒</span>
+            <p>Your cart is empty.</p>
+            <a class="btn" href="index.html">Continue shopping</a>
+          </div>`;
+        return;
+      }
+
+      const form = document.getElementById('checkout-form');
+      const user = API.auth.current();
+      form.elements.name.value = user.name;
+
+      // Shipping options come from the Logistics module so the UI and server always agree.
+      document.getElementById('shipping-options').innerHTML = Object.entries(Logistics.methods)
+        .map(([id, m], i) => `
+          <label class="option">
+            <input type="radio" name="shipping" value="${id}" ${i === 0 ? 'checked' : ''}>
+            <div><strong>${m.label}</strong><span>${m.eta}</span></div>
+          </label>`).join('');
+
+      function renderSummary() {
+        const subtotal = API.cart.subtotal();
+        const shipping = Logistics.quote(form.elements.shipping.value, subtotal);
+        document.getElementById('summary').innerHTML = `
+          <h3>Summary</h3>
+          ${lines.map(l => `
+            <div class="row small"><span>${l.qty} × ${esc(l.name)}</span><span>${fmt(l.lineTotal)}</span></div>`).join('')}
+          <div class="row"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
+          <div class="row"><span>Delivery</span><span>${shipping === 0 ? 'Free' : fmt(shipping)}</span></div>
+          <div class="row total"><span>Total</span><span class="price">${fmt(subtotal + shipping)}</span></div>`;
+      }
+      form.addEventListener('change', renderSummary);
+      renderSummary();
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const address = {
+          name: fd.get('name'),
+          phone: fd.get('phone'),
+          street: fd.get('address'),
+          city: fd.get('city')
+        };
+
+        const btn = document.getElementById('place');
+        btn.disabled = true;
+        btn.textContent = 'Processing…';
+        try {
+          const order = await API.placeOrder({
+            address,
+            shippingId: fd.get('shipping'),
+            paymentMethod: fd.get('payment')
+          });
+          updateCartBadge();
+          window.location.href = `order-confirmation.html?id=${order.id}`;
+        } catch (err) {
+          toast(err.message);
+          btn.disabled = false;
+          btn.textContent = 'Place order';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account – ShopNG</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container narrow">
+    <h1 class="page-title">My account</h1>
+
+    <div class="profile" id="profile"></div>
+
+    <h2 class="section-head"><span>My orders</span></h2>
+    <div id="orders"><p class="muted">Loading…</p></div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    (async function () {
+      if (!requireLogin()) return;
+      initLayout('account');
+
+      const user = API.auth.current();
+      document.getElementById('profile').innerHTML = `
+        <div class="avatar">${esc(user.name.charAt(0))}</div>
+        <div>
+          <strong>${esc(user.name)}</strong>
+          <div class="muted">${esc(user.email)}</div>
+        </div>
+        <button class="btn btn-outline" id="logout">Log out</button>`;
+
+      document.getElementById('logout').onclick = () => {
+        API.auth.logout();
+        window.location.href = 'index.html';
+      };
+
+      const box = document.getElementById('orders');
+      try {
+        const orders = await API.listOrders();
+        box.innerHTML = orders.length
+          ? orders.map(o => `
+            <a class="order-card" href="order-confirmation.html?id=${esc(o.id)}">
+              <div>
+                <strong>#${esc(o.id)}</strong>
+                <div class="muted">${new Date(o.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+              </div>
+              <div class="order-right">
+                <span class="price">${fmt(o.total)}</span>
+                <span class="status">${esc(o.status)}</span>
+              </div>
+            </a>`).join('')
+          : `<div class="empty"><span>📦</span><p>No orders yet.</p><a class="btn" href="index.html">Start shopping</a></div>`;
+      } catch (err) {
+        box.innerHTML = `<p>${esc(err.message)}</p>`;
+      }
+    })();
+  </script>
+</body>
+</html>
