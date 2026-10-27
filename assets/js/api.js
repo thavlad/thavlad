@@ -1,5 +1,5 @@
 // ============================================================
-// MOCK BACKEND WITH IMAGES, SOFT DELETE & RECOVERY
+// MOCK BACKEND WITH IMAGES, SOFT DELETE & ROBUST DB REPAIR
 // ============================================================
 const API = (() => {
   const DB_KEY = 'shopng_db';
@@ -20,7 +20,8 @@ const API = (() => {
 
   function db() {
     let d = read(DB_KEY, null);
-    if (!d) {
+    // Robust check: if db doesn't exist or products array is missing/empty, re-seed automatically
+    if (!d || !Array.isArray(d.products) || d.products.length === 0) {
       d = {
         products: SEED_PRODUCTS.map(p => ({ ...p, images: p.images || [], isDeleted: false })),
         users: [
@@ -225,7 +226,7 @@ const API = (() => {
     return order;
   }
 
-  // ---------- ADMIN EXTENSIONS (RECOVERY & MULTI-IMAGES) ----------
+  // ---------- ADMIN EXTENSIONS ----------
   const admin = {
     async check() {
       await wait();
