@@ -1,61 +1,18 @@
-// js/hero-slider.js
+// js/hero-slider.js - Clean Slider Engine
+let currentSlide = 0;
+const slides = document.querySelectorAll('.hero-slide');
 
-class HeroSlider {
-    constructor() {
-        this.slides = document.querySelectorAll('.hero-slide');
-        this.currentIndex = 0;
-        this.intervalTime = 5000; // Change slide every 5 seconds
-        this.timer = null;
-        this.brandName = 'SUMUS Store'; // Updated brand identifier
-
-        if (this.slides.length > 0) {
-            this.init();
-        }
-    }
-
-    init() {
-        this.showSlide(this.currentIndex);
-        this.startAutoPlay();
-
-        // Optional next/prev button bindings
-        const nextBtn = document.getElementById('slider-next');
-        const prevBtn = document.getElementById('slider-prev');
-
-        if (nextBtn) nextBtn.addEventListener('click', () => this.nextSlide());
-        if (prevBtn) prevBtn.addEventListener('click', () => this.prevSlide());
-
-        console.log(`Initialized Hero Slider for ${this.brandName}`);
-    }
-
-    showSlide(index) {
-        this.slides.forEach((slide, i) => {
-            slide.style.display = (i === index) ? 'block' : 'none';
-        });
-    }
-
-    nextSlide() {
-        this.currentIndex = (this.currentIndex + 1) % this.slides.length;
-        this.showSlide(this.currentIndex);
-        this.resetAutoPlay();
-    }
-
-    prevSlide() {
-        this.currentIndex = (this.currentIndex - 1 + this.slides.length) % this.slides.length;
-        this.showSlide(this.currentIndex);
-        this.resetAutoPlay();
-    }
-
-    startAutoPlay() {
-        this.timer = setInterval(() => {
-            this.nextSlide();
-        }, this.intervalTime);
-    }
-
-    resetAutoPlay() {
-        clearInterval(this.timer);
-        this.startAutoPlay();
-    }
+function showSlide(index) {
+  if (!slides.length) return;
+  slides.forEach((s, i) => s.style.display = i === index ? 'block' : 'none');
 }
 
-// Global instance
-const heroSlider = new HeroSlider();
+function nextSlide() {
+  currentSlide = (currentSlide + 1) % slides.length;
+  showSlide(currentSlide);
+}
+
+if (slides.length > 0) {
+  showSlide(0);
+  setInterval(nextSlide, 5000);
+}
