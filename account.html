@@ -9,13 +9,34 @@
 <body>
   <div id="app-header"></div>
 
-  <main class="container narrow">
-    <h1 class="page-title">My account</h1>
+  <main class="container">
+    <!-- Unauthenticated View -->
+    <div id="auth-required" class="empty hidden" style="margin-top: 40px;">
+      <span>🔒</span>
+      <p>Please log in to view your account profile and order history.</p>
+      <a href="login.html" class="btn" style="margin-top: 10px;">Log In</a>
+    </div>
 
-    <div class="profile" id="profile"></div>
+    <!-- Main Customer Account Container -->
+    <div id="account-container" class="hidden" style="margin-top: 20px;">
+      
+      <!-- ADMIN SHORTCUT BANNER (Injected via JS if user is admin) -->
+      <div id="admin-banner-slot"></div>
 
-    <h2 class="section-head"><span>My orders</span></h2>
-    <div id="orders"><p class="muted">Loading…</p></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+          <h1 style="margin: 0;">👤 Account Overview</h1>
+          <p class="muted" style="margin-top: 4px;">Logged in as <strong id="user-email-display"></strong></p>
+        </div>
+        <button class="btn btn-outline" onclick="handleLogout()" style="color: var(--red); border-color: var(--red);">Log Out</button>
+      </div>
+
+      <!-- Customer Order History -->
+      <div style="background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-top: 20px;">
+        <h2>📦 Order History</h2>
+        <div id="orders-list-container" style="margin-top: 14px;"><p class="muted">Loading your orders...</p></div>
+      </div>
+    </div>
   </main>
 
   <div id="app-nav"></div>
@@ -25,44 +46,58 @@
   <script src="assets/js/integrations.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/layout.js"></script>
+
   <script>
     (async function () {
-      if (!requireLogin()) return;
-      initLayout('account');
+      initLayout();
 
       const user = API.auth.current();
-      document.getElementById('profile').innerHTML = `
-        <div class="avatar">${esc(user.name.charAt(0))}</div>
-        <div>
-          <strong>${esc(user.name)}</strong>
-          <div class="muted">${esc(user.email)}</div>
-        </div>
-        <button class="btn btn-outline" id="logout">Log out</button>`;
 
-      document.getElementById('logout').onclick = () => {
-        API.auth.logout();
-        window.location.href = 'index.html';
-      };
+      if (!user) {
+        document.getElementById('auth-required').classList.remove('hidden');
+        return;
+      }
 
-      const box = document.getElementById('orders');
+      document.getElementById('account-container').classList.remove('hidden');
+      document.getElementById('user-email-display').textContent = user.email;
+
+      // Render Admin Shortcut Banner if Administrator
+      if (user.email === 'admin@shopng.ng' || user.isAdmin) {
+        document.getElementById('admin-banner-slot').innerHTML = `
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div>
+              <h3 style="color: #166534; margin: 0 0 4px 0;">👑 Store Administrator Portal</h3>
+              <p style="color: #15803d; margin: 0; font-size: 13px;">You have active management privileges for ShopNG.</p>
+            </div>
+            <a href="admin.html" class="btn" style="background: #16a34a; color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; white-space: nowrap;">Open Admin Dashboard →</a>
+          </div>
+        `;
+      }
+
+      // Load Customer Orders
       try {
         const orders = await API.listOrders();
-        box.innerHTML = orders.length
-          ? orders.map(o => `
-            <a class="order-card" href="order-confirmation.html?id=${esc(o.id)}">
-              <div>
-                <strong>#${esc(o.id)}</strong>
-                <div class="muted">${new Date(o.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+        const ordersBox = document.getElementById('orders-list-container');
+        ordersBox.innerHTML = orders.length === 0
+          ? '<p class="muted">You have not placed any orders yet.</p>'
+          : orders.map(o => `
+            <div class="order-card" style="border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong>Order #${esc(o.id)}</strong>
+                <span class="status" style="background:#e0f2fe; color:#0369a1;">${o.status}</span>
               </div>
-              <div class="order-right">
-                <span class="price">${fmt(o.total)}</span>
-                <span class="status">${esc(o.status)}</span>
-              </div>
-            </a>`).join('')
-          : `<div class="empty"><span>📦</span><p>No orders yet.</p><a class="btn" href="index.html">Start shopping</a></div>`;
+              <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">Total: <strong>${fmt(o.total)}</strong> · ${new Date(o.createdAt).toLocaleDateString()}</div>
+            </div>
+          `).join('');
       } catch (err) {
-        box.innerHTML = `<p>${esc(err.message)}</p>`;
+        document.getElementById('orders-list-container').innerHTML = '<p class="muted">Could not load orders.</p>';
       }
+
+      window.handleLogout = () => {
+        API.auth.logout();
+        toast('Logged out');
+        window.location.href = 'login.html';
+      };
     })();
   </script>
 </body>
