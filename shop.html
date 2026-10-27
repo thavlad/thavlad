@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title> Shop - SUMUS Store</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+
+  <header class="top-nav">
+    <div class="container nav-flex">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-s-badge">S</span>
+        <span>SUMUS</span>
+      </a>
+      <nav style="display:flex; gap:1.5rem;">
+        <a href="index.html" style="color:white;">Home</a>
+        <a href="shop.html" style="color:white; font-weight:600;">Shop Products</a>
+        <a href="cart.html" style="color:white;">Cart (<span id="cart-count">0</span>)</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container shop-layout">
+    <!-- Sidebar Filters -->
+    <aside class="filter-card">
+      <h3 style="margin-bottom:1rem;">Categories</h3>
+      <ul style="display:flex; flex-direction:column; gap:0.5rem;">
+        <li><label><input type="checkbox"> Smartphones</label></li>
+        <li><label><input type="checkbox"> Laptops</label></li>
+        <li><label><input type="checkbox"> Audio</label></li>
+      </ul>
+    </aside>
+
+    <!-- Catalog Grid -->
+    <section class="product-grid">
+      <div class="product-card">
+        <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=300" alt="Samsung Galaxy S24">
+        <h3>Samsung S24 Ultra</h3>
+        <p style="color:#ee0000; font-weight:700; margin-bottom:1rem;">₦1,600,000</p>
+        <button onclick="addToCart(2, 'Samsung S24 Ultra', 1600000, '')" class="btn-primary">Add to Cart</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html>
