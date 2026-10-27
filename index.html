@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShopNG – Nigeria</title>
+  <title>ShopNG – Online Store in Lagos</title>
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
   <div id="app-header"></div>
 
-  <main class="container">
-    <div class="only-mobile pills-wrap">
-      <div class="pills" id="cat-pills"></div>
-    </div>
+  <div class="only-mobile pills-wrap">
+    <div class="pills" id="cat-pills"></div>
+  </div>
 
+  <main class="container">
     <div class="layout">
       <aside class="sidebar only-desktop">
         <h3>Categories</h3>
@@ -37,11 +37,19 @@
   <script src="assets/js/integrations.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/layout.js"></script>
+
   <script>
-    initLayout('home');
-    renderCategoryNav('all');
-    API.listProducts({ sort: 'popular' })
-      .then(list => renderGrid('grid', list.slice(0, 8)));
+    (async function () {
+      initLayout('home');
+      renderCategoryNav('all');
+
+      try {
+        const products = await API.listProducts({ sort: 'popular' });
+        renderGrid('grid', products.slice(0, 8));
+      } catch (err) {
+        document.getElementById('grid').innerHTML = '<div class="empty"><span>⚠️</span><p>Failed to load products.</p></div>';
+      }
+    })();
   </script>
 </body>
 </html>
