@@ -72,20 +72,16 @@ document.addEventListener('click', e => {
 
 function productCard(p) { 
   const wished = wishlist().includes(p.id); 
-  const mainImg = (p.images && p.images.length > 0)
-    ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" style="width:100%; height:100%; object-fit:contain;">`
-    : p.emoji;
-
   return `
     <article class="card"> 
       <button class="heart ${wished ? 'on' : ''}" data-wish="${p.id}" aria-label="Save to wishlist">${wished ? '♥' : '♡'}</button> 
       <a class="card-link" href="product.html?id=${p.id}"> 
-        <div class="card-img">${mainImg}</div> 
+        <div class="card-img">${p.emoji}</div> 
         <div class="name">${esc(p.name)}</div> 
         <div class="rating">⭐ ${p.rating} · ${p.sold} sold</div> 
         <div class="price-row"> 
           <span class="price">${fmt(p.price)}</span>${p.oldPrice ? `<s class="old"> ${fmt(p.oldPrice)}</s>` : ''}
-        </div>
+        </div> 
         <div class="delivery">${esc(p.delivery)}</div> 
         ${p.stock === 0 ? '<div class="out">Out of stock</div>' : ''} 
       </a> 
