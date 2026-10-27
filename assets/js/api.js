@@ -234,7 +234,7 @@ const API = (() => {
     return order;
   }
 
-  // ---------- EXPANDED ADMIN API SUITE ----------
+  // ---------- EXPANDED ADMIN API SUITE (WITH FULL EDIT SUPPORT) ----------
   const admin = {
     async check() {
       await wait();
@@ -319,6 +319,10 @@ const API = (() => {
       const d = db();
       const index = d.products.findIndex(p => p.id === Number(productId));
       if (index === -1) fail('Product not found', 404);
+
+      if (typeof updatedData.images === 'string') {
+        updatedData.images = updatedData.images.split(',').map(s => s.trim()).filter(Boolean);
+      }
 
       d.products[index] = { ...d.products[index], ...updatedData };
       saveDb(d);
