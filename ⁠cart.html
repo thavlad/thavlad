@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart - SUMUS Store</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+
+  <header class="top-nav">
+    <div class="container nav-flex">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-s-badge">S</span>
+        <span>SUMUS</span>
+      </a>
+      <nav style="display:flex; gap:1.5rem;">
+        <a href="index.html" style="color:white;">Home</a>
+        <a href="shop.html" style="color:white;">Shop Products</a>
+        <a href="cart.html" style="color:white; font-weight:600;">Cart (<span id="cart-count">0</span>)</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container cart-layout">
+    <section>
+      <h1 style="margin-bottom:1rem;">Shopping Cart</h1>
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody id="cart-items">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </section>
+
+    <aside class="order-summary">
+      <h3>Order Summary</h3>
+      <div style="display:flex; justify-content:space-between; margin:1rem 0; font-weight:700;">
+        <span>Total:</span>
+        <span id="cart-total">₦0</span>
+      </div>
+      <button class="btn-primary" style="width:100%;">Proceed to Checkout</button>
+    </aside>
+  </main>
+
+  <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html>
