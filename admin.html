@@ -24,7 +24,7 @@
     .chart-fill { background: var(--orange); height: 100%; }
   </style>
 </head>
-<body>
+<body id="protected-admin-body" style="display: none;">
   <div id="app-header"></div>
 
   <main class="container">
@@ -34,7 +34,7 @@
     </div>
 
     <!-- Main Content Tabs -->
-    <div id="admin-content" class="hidden">
+    <div id="admin-content">
       
       <!-- Tab Buttons -->
       <div class="tab-bar">
@@ -245,19 +245,16 @@
 
   <script>
     (async function () {
-      initLayout();
-
-      const contentBox = document.getElementById('admin-content');
-
-      // STRICT SECURITY ROUTE GUARD
-      try {
-        await API.admin.check();
-        contentBox.classList.remove('hidden');
-      } catch (err) {
-        // Instantly kick non-admin users to login.html
+      // IMMEDIATE SYNCHRONOUS / ASYNC SECURITY GUARD
+      const user = API.auth.current();
+      if (!user || user.email !== 'admin@shopng.ng') {
         window.location.replace('login.html');
         return;
       }
+
+      // If authorized, reveal body
+      document.getElementById('protected-admin-body').style.display = 'block';
+      initLayout();
 
       let cachedOrders = [];
       let cachedProducts = [];
