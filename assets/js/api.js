@@ -1,11 +1,5 @@
 // ============================================================
-// MOCK BACKEND
-// Every function is async and returns the data a real server
-// would send. To go live, replace the bodies with fetch('/api/...')
-// calls. Pages never touch localStorage directly, so they won't change.
-// 
-// Reset all demo data any time: open the browser console and run
-//   localStorage.clear()
+// MOCK BACKEND WITH EXTENDED ADMIN FEATURES
 // ============================================================
 const API = (() => {
   const DB_KEY = 'shopng_db';
@@ -14,8 +8,11 @@ const API = (() => {
 
   const wait = (ms = 150) => new Promise(r => setTimeout(r, ms));
   const read = (key, fallback) => {
-    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-    catch { return fallback; }
+    try {
+      return JSON.parse(localStorage.getItem(key)) ?? fallback;
+    } catch {
+      return fallback;
+    }
   };
   const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
   const fail = (message, status = 400) => {
@@ -24,27 +21,44 @@ const API = (() => {
     throw err;
   };
 
-  // The "database": seeded once from SEED_PRODUCTS and pre-populated user accounts.
   function db() {
     let d = read(DB_KEY, null);
     if (!d) {
       d = {
         products: SEED_PRODUCTS.map(p => ({ ...p })),
         users: [
-          // Demo customer account
-          { id: 'u_demo', name: 'Ada Okafor', email: 'demo@shopng.ng', password: 'password123' },
-          // Store Administrator account
-          { id: 'u_admin', name: 'Store Admin', email: 'admin@shopng.ng', password: 'password123' }
+          { id: 'u_demo', name: 'Ada Okafor', email: 'demo@shopng.ng', password: 'password123', role: 'customer' },
+          { id: 'u_admin', name: 'Store Admin', email: 'admin@shopng.ng', password: 'password123', role: 'admin' }
         ],
-        orders: []
+        orders: [],
+        promos: [
+          { code: 'LAGOS10', discountPercent: 10, active: true },
+          { code: 'WELCOME5k', discountFixed: 5000, active: true }
+        ]
       };
       write(DB_KEY, d);
     }
+    // Backward compatibility check for roles & promos
+    let updated = false;
+    d.users.forEach(u => {
+      if (!u.role) {
+        u.role = u.email === 'admin@shopng.ng' ? 'admin' : 'customer';
+        updated = true;
+      }
+    });
+    if (!d.promos) {
+      d.promos = [
+        { code: 'LAGOS10', discountPercent: 10, active: true },
+        { code: 'WELCOME5k', discountFixed: 5000, active: true }
+      ];
+      updated = true;
+    }
+    if (updated) saveDb(d);
     return d;
   }
-
+  
   const saveDb = d => write(DB_KEY, d);
-  const publicUser = u => ({ id: u.id, name: u.name, email: u.email });
+  const publicUser = u => ({ id: u.id, name: u.name, email: u.email, role: u.role || 'customer' });
 
   // ---------- PRODUCTS / CATALOG ----------
   async function listProducts({ category = 'all', q = '', sort = 'popular', maxPrice = 0 } = {}) {
@@ -130,7 +144,13 @@ const API = (() => {
       if (d.users.some(u => u.email === email)) fail('An account with this email already exists', 409);
       if (password.length < 6) fail('Password must be at least 6 characters');
 
-      const user = { id: 'u' + Date.now(), name: name.trim(), email, password };
+      const user = { 
+        id: 'u' + Date.now(), 
+        name: name.trim(), 
+        email, 
+        password,
+        role: email === 'admin@shopng.ng' ? 'admin' : 'customer'
+      };
       d.users.push(user);
       saveDb(d);
       write(SESSION_KEY, user.id);
@@ -147,53 +167,62 @@ const API = (() => {
     logout() { localStorage.removeItem(SESSION_KEY); }
   };
 
-  // ---------- ORDERS & CHECKOUT ----------
-  async function placeOrder({ shippingMethod, paymentMethod, address }) {
-    await wait(300);
+  // ---------- ORDERS / CHECKOUT ----------
+  async function placeOrder({ address, shippingId, paymentMethod }) {
+    await wait(400);
     const user = auth.current();
-    if (!user) fail('Please log in to place an order', 401);
+    if (!user) fail('Please log in to checkout', 401);
 
-    const items = cart.detailed();
-    if (items.length === 0) fail('Your cart is empty', 400);
-
-    const subtotal = cart.subtotal();
-    const shipping = Logistics.quote(shippingMethod, subtotal);
-    const total = subtotal + shipping;
-
-    await PaymentGateway.charge({
-      amount: total,
-      reference: 'REF' + Date.now(),
-      method: paymentMethod,
-      email: user.email
-    });
+    const lines = cart.detailed();
+    if (lines.length === 0) fail('Your cart is empty');
+    if (!['card', 'transfer', 'cod'].includes(paymentMethod)) fail('Choose a payment method');
 
     const d = db();
-    for (const item of items) {
-      const prod = d.products.find(p => p.id === item.id);
-      if (!prod) fail(`Product not found: ${item.name}`, 404);
-      if (prod.stock < item.qty) fail(`Insufficient stock for ${prod.name}`, 400);
-      prod.stock -= item.qty;
-      prod.sold += item.qty;
+    for (const line of lines) {
+      const product = d.products.find(p => p.id === line.id);
+      if (!product || line.qty > product.stock) {
+        fail(`Sorry, only ${product ? product.stock : 0} of "${line.name}" left in stock`, 409);
+      }
     }
 
-    const orderId = 'NG' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const tracking = await Logistics.createShipment({ id: orderId });
+    const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
+    const shipping = Logistics.quote(shippingId, subtotal);
+    const total = subtotal + shipping;
+    const orderId = 'NG' + Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    if (paymentMethod !== 'cod') {
+      const result = await PaymentGateway.charge({
+        amount: total, reference: orderId, method: paymentMethod, email: user.email
+      });
+      if (result.status !== 'success') fail('Payment failed. Please try another method.', 402);
+    }
+
+    for (const line of lines) {
+      const target = d.products.find(p => p.id === line.id);
+      if (target) {
+        target.stock -= line.qty;
+        target.sold = (target.sold || 0) + line.qty;
+      }
+    }
 
     const order = {
       id: orderId,
       userId: user.id,
-      items: items.map(i => ({ id: i.id, name: i.name, emoji: i.emoji, price: i.price, qty: i.qty })),
+      userEmail: user.email,
+      userName: user.name,
+      createdAt: new Date().toISOString(),
+      items: lines.map(({ id, name, emoji, price, qty }) => ({ id, name, emoji, price, qty })),
       subtotal,
       shipping,
       total,
       address,
-      payment: paymentMethod,
+      shippingId,
+      paymentMethod,
       status: 'Processing',
-      tracking,
-      createdAt: new Date().toISOString()
+      tracking: await Logistics.createShipment({ id: orderId })
     };
 
-    d.orders.push(order);
+    d.orders.unshift(order);
     saveDb(d);
     cart.clear();
     return order;
@@ -209,85 +238,203 @@ const API = (() => {
   async function getOrder(id) {
     await wait();
     const user = auth.current();
-    const order = db().orders.find(o => o.id === id && user && (o.userId === user.id || user.email === 'admin@shopng.ng'));
+    const order = db().orders.find(o => o.id === id && user && o.userId === user.id);
     if (!order) fail('Order not found', 404);
     return order;
   }
 
-  // ---------- ADMIN EXTENSIONS ----------
+  // ---------- ADMIN SERVICES ----------
   const admin = {
-    // Verifies administrator session rights
     async check() {
       await wait();
       const user = auth.current();
-      if (!user || user.email !== 'admin@shopng.ng') {
-        fail('Access denied. Administrator rights required.', 403);
+      if (!user || (user.role !== 'admin' && user.email !== 'admin@shopng.ng')) {
+        fail('Access denied. Administrator privileges required.', 403);
       }
       return user;
     },
 
-    // Retrieve all customer orders across the platform
-    async listAllOrders() {
+    async getAnalytics() {
       await this.check();
-      return db().orders;
+      const d = db();
+      const orders = d.orders || [];
+      const products = d.products || [];
+
+      const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+      const totalOrders = orders.length;
+      const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+      const lowStockCount = products.filter(p => p.stock < 5).length;
+
+      // Category Sales breakdown
+      const categorySales = {};
+      orders.forEach(order => {
+        (order.items || []).forEach(item => {
+          const p = products.find(x => x.id === item.id);
+          const cat = p ? p.category : 'other';
+          categorySales[cat] = (categorySales[cat] || 0) + (item.price * item.qty);
+        });
+      });
+
+      // Top Selling Products
+      const topSelling = products.slice().sort((a, b) => (b.sold || 0) - (a.sold || 0)).slice(0, 5);
+
+      return {
+        totalRevenue,
+        totalOrders,
+        avgOrderValue,
+        lowStockCount,
+        categorySales,
+        topSelling
+      };
     },
 
-    // Update fulfillment status & tracking number for an order
-    async updateOrderStatus(orderId, status, tracking) {
+    async listOrders({ status = 'all', query = '' } = {}) {
+      await this.check();
+      let orders = db().orders.slice();
+      if (status !== 'all') {
+        orders = orders.filter(o => o.status === status);
+      }
+      if (query) {
+        const q = query.toLowerCase();
+        orders = orders.filter(o => 
+          o.id.toLowerCase().includes(q) || 
+          (o.userEmail && o.userEmail.toLowerCase().includes(q)) ||
+          (o.userName && o.userName.toLowerCase().includes(q))
+        );
+      }
+      return orders;
+    },
+
+    async updateOrderStatus(orderId, status) {
       await this.check();
       const d = db();
       const order = d.orders.find(o => o.id === orderId);
       if (!order) fail('Order not found', 404);
       order.status = status;
-      if (tracking) order.tracking = tracking;
       saveDb(d);
       return order;
     },
 
-    // Modify inventory stock count for a specific product
     async updateStock(productId, newStock) {
       await this.check();
       const d = db();
-      const product = d.products.find(p => p.id === Number(productId));
-      if (!product) fail('Product not found', 404);
-      product.stock = Math.max(0, Number(newStock));
+      const prod = d.products.find(p => p.id === Number(productId));
+      if (!prod) fail('Product not found', 404);
+      prod.stock = Math.max(0, Number(newStock));
       saveDb(d);
-      return product;
+      return prod;
     },
 
-    // Add a new product into store catalog
-    async addProduct(productData) {
+    async updateProduct(id, data) {
+      await this.check();
+      const d = db();
+      const prod = d.products.find(p => p.id === Number(id));
+      if (!prod) fail('Product not found', 404);
+
+      prod.name = data.name || prod.name;
+      prod.brand = data.brand || prod.brand;
+      prod.price = Number(data.price);
+      prod.oldPrice = data.oldPrice ? Number(data.oldPrice) : null;
+      prod.stock = Number(data.stock);
+      prod.category = data.category || prod.category;
+      prod.emoji = data.emoji || prod.emoji;
+      prod.desc = data.desc !== undefined ? data.desc : prod.desc;
+
+      saveDb(d);
+      return prod;
+    },
+
+    async addProduct(data) {
       await this.check();
       const d = db();
       const newId = d.products.length ? Math.max(...d.products.map(p => p.id)) + 1 : 1;
       const newProduct = {
         id: newId,
-        name: productData.name,
-        brand: productData.brand || 'ShopNG',
-        price: Number(productData.price),
-        oldPrice: productData.oldPrice ? Number(productData.oldPrice) : null,
+        name: data.name,
+        brand: data.brand || 'ShopNG',
+        price: Number(data.price),
+        oldPrice: data.oldPrice ? Number(data.oldPrice) : null,
         rating: 5.0,
         sold: 0,
-        stock: Number(productData.stock),
-        emoji: productData.emoji || '📦',
-        category: productData.category || 'electronics',
-        delivery: productData.delivery || 'Standard Delivery',
-        desc: productData.desc || ''
+        stock: Number(data.stock),
+        emoji: data.emoji || '📦',
+        category: data.category || 'electronics',
+        delivery: data.delivery || 'Standard Delivery',
+        desc: data.desc || ''
       };
       d.products.push(newProduct);
       saveDb(d);
       return newProduct;
     },
 
-    // Remove a product from store catalog
     async deleteProduct(productId) {
       await this.check();
       const d = db();
       d.products = d.products.filter(p => p.id !== Number(productId));
       saveDb(d);
       return true;
+    },
+
+    async listUsers() {
+      await this.check();
+      const d = db();
+      const orders = d.orders || [];
+      return d.users.map(u => ({
+        ...publicUser(u),
+        orderCount: orders.filter(o => o.userId === u.id || o.userEmail === u.email).length
+      }));
+    },
+
+    async toggleUserRole(userId) {
+      await this.check();
+      const d = db();
+      const u = d.users.find(user => user.id === userId);
+      if (!u) fail('User not found', 404);
+      u.role = u.role === 'admin' ? 'customer' : 'admin';
+      saveDb(d);
+      return publicUser(u);
+    },
+
+    async listPromos() {
+      await this.check();
+      return db().promos || [];
+    },
+
+    async addPromo(data) {
+      await this.check();
+      const d = db();
+      if (!d.promos) d.promos = [];
+      const code = data.code.trim().toUpperCase();
+      if (d.promos.some(p => p.code === code)) fail('Promo code already exists', 409);
+
+      const newPromo = {
+        code,
+        discountPercent: data.discountPercent ? Number(data.discountPercent) : null,
+        discountFixed: data.discountFixed ? Number(data.discountFixed) : null,
+        active: true
+      };
+      d.promos.push(newPromo);
+      saveDb(d);
+      return newPromo;
+    },
+
+    async deletePromo(code) {
+      await this.check();
+      const d = db();
+      d.promos = (d.promos || []).filter(p => p.code !== code);
+      saveDb(d);
+      return true;
     }
   };
 
-  return { listProducts, getProduct, cart, auth, placeOrder, listOrders, getOrder, admin };
+  return { 
+    listProducts, 
+    getProduct, 
+    cart, 
+    auth, 
+    placeOrder, 
+    listOrders, 
+    getOrder, 
+    admin 
+  };
 })();
