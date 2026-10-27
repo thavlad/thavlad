@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add New Product – ShopNG Admin</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <style>
+    .form-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); max-width: 600px; margin: 30px auto; }
+    .file-upload-box { border: 2px dashed var(--border); padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 15px; background: #fafafa; }
+    .preview-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+    .preview-thumb { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); background: #eee; }
+  </style>
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+      <h1>➕ Add New Product</h1>
+      <a href="admin.html" class="btn" style="background: var(--border); color: var(--text);">← Back to Dashboard</a>
+    </div>
+
+    <!-- Access Denied Box -->
+    <div id="denied-box" class="empty hidden" style="margin-top: 40px;">
+      <span>🔒</span>
+      <p>Access Denied. You must log in as an administrator (admin@shopng.ng).</p>
+      <a href="login.html" class="btn" style="margin-top: 10px;">Log in as Admin</a>
+    </div>
+
+    <!-- Form Content -->
+    <div id="form-content" class="hidden">
+      <div class="form-card">
+        <form class="auth-form" id="create-product-form">
+          <label>Product Name
+            <input name="name" required placeholder="e.g. Smart Watch Series 7">
+          </label>
+
+          <div style="display: flex; gap: 10px;">
+            <label style="flex: 1;">Brand
+              <input name="brand" placeholder="e.g. Apple / ShopNG">
+            </label>
+            <label style="flex: 1;">Category
+              <select name="category">
+                <option value="electronics">Electronics</option>
+                <option value="fashion">Fashion</option>
+                <option value="home">Home</option>
+                <option value="beauty">Beauty</option>
+                <option value="groceries">Groceries</option>
+                <option value="sports">Sports</option>
+              </select>
+            </label>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <label style="flex: 1;">Price (₦)
+              <input name="price" type="number" required placeholder="15000">
+            </label>
+            <label style="flex: 1;">Old Price / Discount (₦)
+              <input name="oldPrice" type="number" placeholder="20000">
+            </label>
+            <label style="flex: 1;">Stock Quantity
+              <input name="stock" type="number" required value="15">
+            </label>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <label style="flex: 2;">Emoji Fallback
+              <input name="emoji" required value="📦">
+            </label>
+            <label style="flex: 2;">Delivery Info
+              <input name="delivery" value="Standard Delivery">
+            </label>
+          </div>
+
+          <label>Product Description
+            <textarea name="desc" rows="3" placeholder="Describe product features..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit;"></textarea>
+          </label>
+
+          <div class="file-upload-box" style="margin-top: 20px;">
+            <h3 style="margin-bottom: 5px; font-size: 15px;">🖼️ Upload Product Images</h3>
+            <p class="muted" style="font-size: 12px; margin-bottom: 10px;">Select up to 6 pictures from your device. They will be saved to your store repository.</p>
+            <input type="file" id="image-file-input" accept="image/*" multiple max="6" style="display: none;">
+            <button type="button" class="btn" onclick="document.getElementById('image-file-input').click()" style="background: var(--text); color: #fff;">Choose Images</button>
+            <div class="preview-grid" id="image-preview-container"></div>
+          </div>
+
+          <button class="btn btn-block" type="submit" style="margin-top: 10px;">Publish Product to Store</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+
+  <script>
+    (async function () {
+      initLayout();
+
+      const formContent = document.getElementById('form-content');
+      const deniedBox = document.getElementById('denied-box');
+      let uploadedImagePaths = [];
+
+      try {
+        await API.admin.check();
+        formContent.classList.remove('hidden');
+      } catch (err) {
+        deniedBox.classList.remove('hidden');
+        return;
+      }
+
+      // Handle file selection and local preview simulation mapping to images/ folder
+      document.getElementById('image-file-input').addEventListener('change', (e) => {
+        const files = Array.from(e.target.files).slice(0, 6); // Limit to 6
+        const previewContainer = document.getElementById('image-preview-container');
+        previewContainer.innerHTML = '';
+        uploadedImagePaths = [];
+
+        files.forEach((file, index) => {
+          // Map file to local images/ folder path convention
+          const simulatedPath = `images/${file.name}`;
+          uploadedImagePaths.push(simulatedPath);
+
+          const reader = new FileReader();
+          reader.onload = (uploadEvent) => {
+            const img = document.createElement('img');
+            img.src = uploadEvent.target.result;
+            img.className = 'preview-thumb';
+            previewContainer.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      document.getElementById('create-product-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = Object.fromEntries(fd.entries());
+
+        const productPayload = {
+          name: data.name,
+          brand: data.brand || 'ShopNG',
+          price: data.price,
+          oldPrice: data.oldPrice,
+          stock: data.stock,
+          emoji: data.emoji,
+          category: data.category,
+          delivery: data.delivery,
+          desc: data.desc,
+          images: uploadedImagePaths // Passes the local image file paths
+        };
+
+        try {
+          await API.admin.addProduct(productPayload);
+          toast('Product successfully published with local images!');
+          setTimeout(() => {
+            window.location.href = 'admin.html';
+          }, 1000);
+        } catch (err) {
+          toast(err.message);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
