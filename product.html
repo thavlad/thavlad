@@ -42,24 +42,8 @@
         const product = await API.getProduct(id);
         const container = document.getElementById('product');
 
-        const images = product.images && product.images.length > 0 ? product.images : [];
-        const mainDisplay = images.length > 0 
-          ? `<img id="main-product-img" src="${esc(images[0])}" alt="${esc(product.name)}" style="width:100%; max-height:350px; object-fit:contain;">` 
-          : `<span style="font-size:120px;">${product.emoji}</span>`;
-
-        const thumbnailsHtml = images.length > 1 
-          ? `<div style="display:flex; gap:8px; margin-top:14px; justify-content:center; flex-wrap:wrap;">` + 
-              images.slice(0, 6).map((img, idx) => `
-                <img src="${esc(img)}" onclick="document.getElementById('main-product-img').src='${esc(img)}'" style="width:54px; height:54px; object-fit:cover; border-radius:10px; cursor:pointer; border:2px solid var(--border);">
-              `).join('') + 
-            `</div>` 
-          : '';
-
         container.innerHTML = `
-          <div class="product-img" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
-            ${mainDisplay}
-            ${thumbnailsHtml}
-          </div>
+          <div class="product-img">${product.emoji}</div>
           <div class="product-info">
             <div class="brand">${esc(product.brand)}</div>
             <h1>${esc(product.name)}</h1>
