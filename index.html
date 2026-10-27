@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopNG – Nigeria</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+
+  <main class="container">
+    <div class="only-mobile pills-wrap">
+      <div class="pills" id="cat-pills"></div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar only-desktop">
+        <h3>Categories</h3>
+        <div id="cat-side"></div>
+      </aside>
+
+      <section class="main">
+        <div class="section-head">
+          <h2>Popular in Lagos</h2>
+          <a href="listing.html?sort=popular">See all</a>
+        </div>
+        <div class="grid" id="grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <div id="app-nav"></div>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/integrations.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script>
+    initLayout('home');
+    renderCategoryNav('all');
+    API.listProducts({ sort: 'popular' })
+      .then(list => renderGrid('grid', list.slice(0, 8)));
+  </script>
+</body>
+</html>
