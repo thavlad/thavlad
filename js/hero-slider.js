@@ -6,6 +6,7 @@ class HeroSlider {
         this.currentIndex = 0;
         this.intervalTime = 5000; // Change slide every 5 seconds
         this.timer = null;
+        this.brandName = 'SUMUS Store'; // Updated brand identifier
 
         if (this.slides.length > 0) {
             this.init();
@@ -22,6 +23,8 @@ class HeroSlider {
 
         if (nextBtn) nextBtn.addEventListener('click', () => this.nextSlide());
         if (prevBtn) prevBtn.addEventListener('click', () => this.prevSlide());
+
+        console.log(`Initialized Hero Slider for ${this.brandName}`);
     }
 
     showSlide(index) {
