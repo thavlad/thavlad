@@ -1,5 +1,5 @@
 // ============================================================
-// MOCK BACKEND WITH ADVANCED ADMIN EXTENSIONS
+// MOCK BACKEND WITH ADVANCED ADMIN EXTENSIONS & SECURITY
 // ============================================================
 const API = (() => {
   const DB_KEY = 'shopng_db';
@@ -18,7 +18,6 @@ const API = (() => {
     throw err;
   };
 
-  // Database initialization with extended modules
   function db() {
     let d = read(DB_KEY, null);
     if (!d) {
@@ -50,7 +49,7 @@ const API = (() => {
   }
 
   const saveDb = d => write(DB_KEY, d);
-  const publicUser = u => ({ id: u.id, name: u.name, email: u.email, isAdmin: u.email === 'admin@shopng.ng' || u.isAdmin, isSuspended: u.isSuspended });
+  const publicUser = u => ({ id: u.id, name: u.name, email: u.email, isAdmin: u.email === 'admin@shopng.ng' || u.isAdmin, isSuspended: Boolean(u.isSuspended) });
 
   // ---------- PRODUCTS / CATALOG ----------
   async function listProducts({ category = 'all', q = '', sort = 'popular', maxPrice = 0 } = {}) {
@@ -226,7 +225,7 @@ const API = (() => {
     return order;
   }
 
-  // ---------- ADVANCED ADMIN EXTENSIONS ----------
+  // ---------- ADMIN EXTENSIONS & SECURITY GUARD ----------
   const admin = {
     async check() {
       await wait();
@@ -256,7 +255,6 @@ const API = (() => {
       const aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
       const lowStockCount = d.products.filter(p => p.stock < 5).length;
 
-      // Category breakdown revenue
       const categorySales = {};
       orders.forEach(o => {
         o.items.forEach(item => {
