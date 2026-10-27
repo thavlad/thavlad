@@ -1,0 +1,43 @@
+/* css/components.css */
+
+/* Primary Action Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Product Cards */
+.product-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1rem;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.product-card img {
+    height: 220px;
+    object-fit: cover;
+    border-radius: calc(var(--radius) * 0.8);
+    margin-bottom: 1rem;
+}
