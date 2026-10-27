@@ -1,12 +1,11 @@
-// js/main.js
-
+// js/main.js - Global Initialization & Cart Counter Badge
 document.addEventListener('DOMContentLoaded', () => {
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-    const navLinks = document.querySelector('.nav-links');
-
-    if (mobileMenuToggle && navLinks) {
-        mobileMenuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-        });
-    }
+  updateCartBadge();
 });
+
+function updateCartBadge() {
+  const cart = JSON.parse(localStorage.getItem('sumus_cart') || '[]');
+  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const badge = document.getElementById('cart-count');
+  if (badge) badge.textContent = count;
+}
