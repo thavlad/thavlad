@@ -35,18 +35,23 @@ const API = (() => {
           images: p.images || []
         })),
         users: [
-          { id: 'u_demo', name: 'Ada Okafor', email: 'demo@shopng.ng', password: 'password123', active: true },
-          { id: 'u_admin', name: 'Store Admin', email: 'admin@shopng.ng', password: 'password123', active: true }
+          { id: 'u_demo', name: 'Ada Okafor', email: 'demo@shopng.ng', password: 'password123', active: true, phone: '08012345678', address: '12 Marina Road, Lagos' },
+          { id: 'u_admin', name: 'Store Admin', email: 'admin@shopng.ng', password: 'password123', active: true, phone: '08098765432', address: 'Headquarters, Victoria Island, Lagos' }
         ],
         orders: [],
         promos: [
           { code: 'LAGOS10', discountPercent: 10, minSpend: 10000 }
         ],
         reviews: [
-          { id: 1, productId: 101, userName: 'Amina B.', rating: 5, comment: 'Excellent quality!', approved: true }
+          { id: 1, productId: 101, userName: 'Amina B.', rating: 5, comment: 'Excellent sound quality!', status: 'Approved', createdAt: new Date().toISOString() }
         ],
         auditLogs: [
-          { id: 1, timestamp: new Date().toISOString(), action: 'System Initialization', adminEmail: 'system' }
+          { id: 1, adminEmail: 'system', action: 'System Initialization', details: 'Database seeded successfully', createdAt: new Date().toISOString() }
+        ],
+        shippingZones: [
+          { id: 1, zone: 'Lagos Mainland', fee: 2000, freeThreshold: 50000 },
+          { id: 2, zone: 'Lagos Island & Lekki', fee: 3500, freeThreshold: 50000 },
+          { id: 3, zone: 'Interstate Delivery', fee: 6500, freeThreshold: 100000 }
         ],
         settings: {
           standardShippingFee: 2000,
@@ -86,7 +91,7 @@ const API = (() => {
 
   async function getProduct(id) {
     await wait();
-    const product = db().products.find(p => p.id === Number(id) && p.status !== 'deleted');
+    const product = db().products.find(p => p.id === Number(id));
     if (!product) fail('Product not found', 404);
     return product;
   }
@@ -201,7 +206,7 @@ const API = (() => {
     const order = {
       id: orderId,
       userId: user.id,
-      email: user.email,
+      userEmail: user.email,
       items: items.map(i => ({ id: i.id, name: i.name, emoji: i.emoji, images: i.images, price: i.price, qty: i.qty })),
       subtotal,
       shipping,
@@ -223,18 +228,18 @@ const API = (() => {
     await wait();
     const user = auth.current();
     if (!user) fail('Please log in to see your orders', 401);
-    return db().orders.filter(o => o.userId === user.id);
+    return db().orders.filter(o => o.userId === user.id || o.userEmail === user.email);
   }
 
   async function getOrder(id) {
     await wait();
     const user = auth.current();
-    const order = db().orders.find(o => o.id === id && user && (o.userId === user.id || user.email === 'admin@shopng.ng'));
+    const order = db().orders.find(o => o.id === id && user && (o.userId === user.id || o.userEmail === user.email || user.email === 'admin@shopng.ng'));
     if (!order) fail('Order not found', 404);
     return order;
   }
 
-  // ---------- EXPANDED ADMIN API SUITE (WITH FULL EDIT SUPPORT) ----------
+  // ---------- COMPLETE ADMIN SUITE ----------
   const admin = {
     async check() {
       await wait();
@@ -245,15 +250,16 @@ const API = (() => {
       return user;
     },
 
-    async logAction(action) {
+    async logAction(action, details = '') {
       const d = db();
       const adminUser = auth.current();
       if (!d.auditLogs) d.auditLogs = [];
       d.auditLogs.unshift({
         id: Date.now(),
-        timestamp: new Date().toISOString(),
+        adminEmail: adminUser ? adminUser.email : 'admin@shopng.ng',
         action,
-        adminEmail: adminUser ? adminUser.email : 'admin@shopng.ng'
+        details,
+        createdAt: new Date().toISOString()
       });
       saveDb(d);
     },
@@ -266,41 +272,32 @@ const API = (() => {
       const aov = totalOrders ? Math.round(totalRevenue / totalOrders) : 0;
       const lowStockCount = d.products.filter(p => p.status !== 'deleted' && p.stock <= 5).length;
 
-      return { totalRevenue, totalOrders, aov, lowStockCount };
+      const categorySales = {};
+      d.orders.forEach(o => {
+        (o.items || []).forEach(item => {
+          const p = d.products.find(x => x.id === item.id);
+          const cat = p ? p.category : 'other';
+          categorySales[cat] = (categorySales[cat] || 0) + (item.price * item.qty);
+        });
+      });
+
+      return { totalRevenue, totalOrders, aov, lowStockCount, categorySales };
     },
 
-    async listOrders(filterStatus = 'all', searchQuery = '') {
+    async listAllOrders() {
       await this.check();
-      const d = db();
-      let orders = [...d.orders];
-
-      if (filterStatus !== 'all') {
-        orders = orders.filter(o => o.status.toLowerCase() === filterStatus.toLowerCase());
-      }
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        orders = orders.filter(o => o.id.toLowerCase().includes(q) || (o.email && o.email.toLowerCase().includes(q)));
-      }
-      return orders;
+      return db().orders;
     },
 
-    async updateOrderStatus(orderId, status, tracking) {
+    async updateOrderStatus(orderId, status) {
       await this.check();
       const d = db();
       const order = d.orders.find(o => o.id === orderId);
       if (!order) fail('Order not found', 404);
       order.status = status;
-      if (tracking) order.tracking = tracking;
       saveDb(d);
-      await this.logAction(`Updated Order #${orderId} status to '${status}'`);
+      await this.logAction('Update Order Status', `Order #${orderId} set to ${status}`);
       return order;
-    },
-
-    async listProducts(includeDeleted = false) {
-      await this.check();
-      const d = db();
-      if (includeDeleted) return d.products;
-      return d.products.filter(p => p.status !== 'deleted');
     },
 
     async updateStock(productId, newStock) {
@@ -310,7 +307,7 @@ const API = (() => {
       if (!product) fail('Product not found', 404);
       product.stock = Math.max(0, Number(newStock));
       saveDb(d);
-      await this.logAction(`Updated stock for '${product.name}' to ${product.stock}`);
+      await this.logAction('Update Stock', `Product '${product.name}' stock updated to ${product.stock}`);
       return product;
     },
 
@@ -324,9 +321,15 @@ const API = (() => {
         updatedData.images = updatedData.images.split(',').map(s => s.trim()).filter(Boolean);
       }
 
-      d.products[index] = { ...d.products[index], ...updatedData };
+      d.products[index] = { 
+        ...d.products[index], 
+        ...updatedData, 
+        price: Number(updatedData.price),
+        oldPrice: updatedData.oldPrice ? Number(updatedData.oldPrice) : null,
+        stock: Number(updatedData.stock)
+      };
       saveDb(d);
-      await this.logAction(`Updated product details for '${d.products[index].name}'`);
+      await this.logAction('Update Product', `Updated details for '${d.products[index].name}'`);
       return d.products[index];
     },
 
@@ -334,6 +337,10 @@ const API = (() => {
       await this.check();
       const d = db();
       const newId = d.products.length ? Math.max(...d.products.map(p => p.id)) + 1 : 1;
+      const imagesArr = typeof productData.images === 'string' 
+        ? productData.images.split(',').map(s => s.trim()).filter(Boolean) 
+        : (productData.images || []);
+
       const newProduct = {
         id: newId,
         name: productData.name,
@@ -347,24 +354,29 @@ const API = (() => {
         category: productData.category || 'electronics',
         delivery: productData.delivery || 'Standard Delivery',
         desc: productData.desc || '',
-        images: productData.images || [],
+        images: imagesArr,
         status: 'active'
       };
       d.products.push(newProduct);
       saveDb(d);
-      await this.logAction(`Added new product '${newProduct.name}'`);
+      await this.logAction('Add Product', `Published new product '${newProduct.name}'`);
       return newProduct;
     },
 
-    async softDeleteProduct(productId) {
+    async deleteProduct(productId) {
       await this.check();
       const d = db();
       const product = d.products.find(p => p.id === Number(productId));
       if (!product) fail('Product not found', 404);
       product.status = 'deleted';
       saveDb(d);
-      await this.logAction(`Moved product '${product.name}' to Trash`);
+      await this.logAction('Trash Product', `Moved product '${product.name}' to trash`);
       return true;
+    },
+
+    async listDeletedProducts() {
+      await this.check();
+      return db().products.filter(p => p.status === 'deleted');
     },
 
     async restoreProduct(productId) {
@@ -374,28 +386,35 @@ const API = (() => {
       if (!product) fail('Product not found', 404);
       product.status = 'active';
       saveDb(d);
-      await this.logAction(`Restored product '${product.name}' from Trash`);
+      await this.logAction('Restore Product', `Restored product '${product.name}' from trash`);
       return product;
     },
 
-    async listCustomers() {
+    async listUsers() {
       await this.check();
       const d = db();
       return d.users.map(u => {
-        const userOrders = d.orders.filter(o => o.email === u.email || o.userId === u.id);
+        const userOrders = d.orders.filter(o => o.userId === u.id || o.userEmail === u.email);
         const ltv = userOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-        return { ...u, orderCount: userOrders.length, ltv };
+        return {
+          ...u,
+          isAdmin: u.email === 'admin@shopng.ng',
+          isSuspended: u.active === false,
+          orderCount: userOrders.length,
+          ltv
+        };
       });
     },
 
-    async toggleUserStatus(userId) {
+    async toggleUserSuspension(userId) {
       await this.check();
       const d = db();
-      const user = d.users.find(u => u.id === String(userId) || u.id === Number(userId));
+      const user = d.users.find(u => String(u.id) === String(userId));
       if (!user) fail('User not found', 404);
+      if (user.email === 'admin@shopng.ng') fail('Cannot suspend main administrator', 403);
       user.active = user.active === false ? true : false;
       saveDb(d);
-      await this.logAction(`Toggled account status for '${user.email}' to active: ${user.active}`);
+      await this.logAction('Toggle User Suspension', `User '${user.email}' suspended state: ${!user.active}`);
       return user;
     },
 
@@ -404,14 +423,14 @@ const API = (() => {
       return db().reviews || [];
     },
 
-    async approveReview(reviewId) {
+    async updateReviewStatus(reviewId, status) {
       await this.check();
       const d = db();
       const r = (d.reviews || []).find(rev => rev.id === Number(reviewId));
       if (r) {
-        r.approved = true;
+        r.status = status;
         saveDb(d);
-        await this.logAction(`Approved review #${reviewId}`);
+        await this.logAction('Moderate Review', `Review #${reviewId} set to ${status}`);
       }
       return r;
     },
@@ -421,35 +440,47 @@ const API = (() => {
       const d = db();
       d.reviews = (d.reviews || []).filter(r => r.id !== Number(reviewId));
       saveDb(d);
-      await this.logAction(`Deleted review #${reviewId}`);
+      await this.logAction('Delete Review', `Deleted review #${reviewId}`);
       return true;
     },
 
-    async listPromos() {
-      await this.check();
-      return db().promos || [];
-    },
-
-    async addPromo(promoData) {
+    async exportData(type) {
       await this.check();
       const d = db();
-      if (!d.promos) d.promos = [];
-      d.promos.push(promoData);
-      saveDb(d);
-      await this.logAction(`Added promo code '${promoData.code}'`);
-      return promoData;
+      if (type === 'products') return JSON.stringify(d.products, null, 2);
+      if (type === 'orders') return JSON.stringify(d.orders, null, 2);
+      return JSON.stringify(d, null, 2);
     },
 
-    async deletePromo(code) {
+    async importProducts(importedProducts) {
       await this.check();
       const d = db();
-      d.promos = (d.promos || []).filter(p => p.code !== code);
+      if (!Array.isArray(importedProducts)) fail('Invalid format');
+      d.products = importedProducts;
       saveDb(d);
-      await this.logAction(`Deleted promo code '${code}'`);
+      await this.logAction('Import Products', `Overwrote catalog with ${importedProducts.length} items`);
       return true;
     },
 
-    async getAuditLogs() {
+    async listShippingZones() {
+      await this.check();
+      const d = db();
+      return d.shippingZones || [];
+    },
+
+    async updateShippingZone(zoneId, fee, freeThreshold) {
+      await this.check();
+      const d = db();
+      const zone = (d.shippingZones || []).find(z => z.id === Number(zoneId));
+      if (!zone) fail('Zone not found', 404);
+      zone.fee = Number(fee);
+      zone.freeThreshold = Number(freeThreshold);
+      saveDb(d);
+      await this.logAction('Update Shipping Zone', `Updated zone '${zone.zone}' delivery fee`);
+      return zone;
+    },
+
+    async listAuditLogs() {
       await this.check();
       return db().auditLogs || [];
     }
