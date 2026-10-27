@@ -1,8 +1,14 @@
 // ============================================================
-// MOCK BACKEND WITH ADVANCED ADMIN EXTENSIONS
+// MOCK BACKEND
+// Every function is async and returns the data a real server
+// would send. To go live, replace the bodies with fetch('/api/...')
+// calls. Pages never touch localStorage directly, so they won't change.
+// 
+// Reset all demo data any time: open the browser console and run
+//   localStorage.clear()
 // ============================================================
 const API = (() => {
-  const DB_KEY = 'shopng_db';
+  const DB_KEY = 'shopng_db_v2';
   const SESSION_KEY = 'shopng_session';
   const CART_KEY = 'shopng_cart';
 
@@ -18,31 +24,35 @@ const API = (() => {
     throw err;
   };
 
-  // Database initialization with extended modules
+  // The "database": seeded once from SEED_PRODUCTS and pre-populated records.
   function db() {
     let d = read(DB_KEY, null);
     if (!d) {
       d = {
-        products: SEED_PRODUCTS.map(p => ({ ...p })),
+        products: (typeof SEED_PRODUCTS !== 'undefined' ? SEED_PRODUCTS : []).map(p => ({ 
+          ...p, 
+          status: p.status || 'active',
+          images: p.images || []
+        })),
         users: [
-          { id: 'u_demo', name: 'Ada Okafor', email: 'demo@shopng.ng', password: 'password123', isAdmin: false, isSuspended: false },
-          { id: 'u_admin', name: 'Store Admin', email: 'admin@shopng.ng', password: 'password123', isAdmin: true, isSuspended: false }
+          { id: 'u_demo', name: 'Ada Okafor', email: 'demo@shopng.ng', password: 'password123', active: true },
+          { id: 'u_admin', name: 'Store Admin', email: 'admin@shopng.ng', password: 'password123', active: true }
         ],
         orders: [],
+        promos: [
+          { code: 'LAGOS10', discountPercent: 10, minSpend: 10000 }
+        ],
         reviews: [
-          { id: 1, productId: 1, userName: 'Ada Okafor', rating: 5, comment: 'Fantastic sound quality and fast delivery!', status: 'Approved', createdAt: new Date().toISOString() },
-          { id: 2, productId: 3, userName: 'Chidi Okoro', rating: 4, comment: 'Keeps water cold all day long.', status: 'Pending', createdAt: new Date().toISOString() }
+          { id: 1, productId: 101, userName: 'Amina B.', rating: 5, comment: 'Excellent quality!', approved: true }
         ],
         auditLogs: [
-          { id: 1, adminEmail: 'admin@shopng.ng', action: 'System Initialized', details: 'Database seeded with default products and categories.', createdAt: new Date().toISOString() }
+          { id: 1, timestamp: new Date().toISOString(), action: 'System Initialization', adminEmail: 'system' }
         ],
-        shippingZones: [
-          { id: 1, zone: 'Lagos Mainland & Island', fee: 2500, freeThreshold: 50000 },
-          { id: 2, zone: 'Other Nigerian States', fee: 5500, freeThreshold: 100000 }
-        ],
-        promos: [
-          { code: 'LAGOS10', discount: 10 }
-        ]
+        settings: {
+          standardShippingFee: 2000,
+          expressShippingFee: 5000,
+          freeDeliveryThreshold: 50000
+        }
       };
       write(DB_KEY, d);
     }
@@ -50,12 +60,12 @@ const API = (() => {
   }
 
   const saveDb = d => write(DB_KEY, d);
-  const publicUser = u => ({ id: u.id, name: u.name, email: u.email, isAdmin: u.email === 'admin@shopng.ng' || u.isAdmin, isSuspended: u.isSuspended });
+  const publicUser = u => ({ id: u.id, name: u.name, email: u.email });
 
   // ---------- PRODUCTS / CATALOG ----------
   async function listProducts({ category = 'all', q = '', sort = 'popular', maxPrice = 0 } = {}) {
     await wait();
-    let items = db().products.slice();
+    let items = db().products.filter(p => p.status !== 'deleted');
 
     if (category !== 'all') items = items.filter(p => p.category === category);
     if (q) {
@@ -66,17 +76,17 @@ const API = (() => {
     if (maxPrice) items = items.filter(p => p.price <= maxPrice);
 
     const sorters = {
-      popular: (a, b) => b.sold - a.sold,
+      popular: (a, b) => (b.sold || 0) - (a.sold || 0),
       priceAsc: (a, b) => a.price - b.price,
       priceDesc: (a, b) => b.price - a.price,
-      rating: (a, b) => b.rating - a.rating
+      rating: (a, b) => (b.rating || 0) - (a.rating || 0)
     };
     return items.sort(sorters[sort] || sorters.popular);
   }
 
   async function getProduct(id) {
     await wait();
-    const product = db().products.find(p => p.id === Number(id));
+    const product = db().products.find(p => p.id === Number(id) && p.status !== 'deleted');
     if (!product) fail('Product not found', 404);
     return product;
   }
@@ -90,14 +100,14 @@ const API = (() => {
       return cart.items()
         .map(i => {
           const p = products.find(x => x.id === i.id);
-          return p ? { ...p, qty: i.qty, lineTotal: p.price * i.qty } : null;
+          return p && p.status !== 'deleted' ? { ...p, qty: i.qty, lineTotal: p.price * i.qty } : null;
         })
         .filter(Boolean);
     },
     subtotal() { return cart.detailed().reduce((sum, l) => sum + l.lineTotal, 0); },
     add(id, qty = 1) {
       const product = db().products.find(p => p.id === Number(id));
-      if (!product) fail('Product not found', 404);
+      if (!product || product.status === 'deleted') fail('Product not found', 404);
       if (product.stock === 0) fail('Sorry, this item is out of stock');
 
       const items = cart.items();
@@ -127,11 +137,7 @@ const API = (() => {
       const id = read(SESSION_KEY, null);
       if (!id) return null;
       const u = db().users.find(x => x.id === id);
-      if (u && u.isSuspended) {
-        localStorage.removeItem(SESSION_KEY);
-        fail('Your account has been suspended. Contact support.', 403);
-      }
-      return u ? publicUser(u) : null;
+      return u && u.active !== false ? publicUser(u) : null;
     },
     async register({ name, email, password }) {
       await wait();
@@ -140,7 +146,7 @@ const API = (() => {
       if (d.users.some(u => u.email === email)) fail('An account with this email already exists', 409);
       if (password.length < 6) fail('Password must be at least 6 characters');
 
-      const user = { id: 'u' + Date.now(), name: name.trim(), email, password, isAdmin: false, isSuspended: false };
+      const user = { id: 'u' + Date.now(), name: name.trim(), email, password, active: true };
       d.users.push(user);
       saveDb(d);
       write(SESSION_KEY, user.id);
@@ -151,7 +157,7 @@ const API = (() => {
       const user = db().users.find(u =>
         u.email === email.trim().toLowerCase() && u.password === password);
       if (!user) fail('Incorrect email or password', 401);
-      if (user.isSuspended) fail('This account has been suspended.', 403);
+      if (user.active === false) fail('Your account has been suspended', 403);
       write(SESSION_KEY, user.id);
       return publicUser(user);
     },
@@ -168,33 +174,35 @@ const API = (() => {
     if (items.length === 0) fail('Your cart is empty', 400);
 
     const subtotal = cart.subtotal();
-    const shipping = Logistics.quote(shippingMethod, subtotal);
+    const d = db();
+    const shipping = (d.settings && d.settings[shippingMethod === 'express' ? 'expressShippingFee' : 'standardShippingFee']) || 2000;
     const total = subtotal + shipping;
 
-    await PaymentGateway.charge({
-      amount: total,
-      reference: 'REF' + Date.now(),
-      method: paymentMethod,
-      email: user.email
-    });
+    if (typeof PaymentGateway !== 'undefined') {
+      await PaymentGateway.charge({
+        amount: total,
+        reference: 'REF' + Date.now(),
+        method: paymentMethod,
+        email: user.email
+      });
+    }
 
-    const d = db();
     for (const item of items) {
       const prod = d.products.find(p => p.id === item.id);
       if (!prod) fail(`Product not found: ${item.name}`, 404);
       if (prod.stock < item.qty) fail(`Insufficient stock for ${prod.name}`, 400);
       prod.stock -= item.qty;
-      prod.sold += item.qty;
+      prod.sold = (prod.sold || 0) + item.qty;
     }
 
     const orderId = 'NG' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const tracking = await Logistics.createShipment({ id: orderId });
+    const tracking = typeof Logistics !== 'undefined' ? await Logistics.createShipment({ id: orderId }) : { trackingNumber: 'TRK-' + orderId };
 
     const order = {
       id: orderId,
       userId: user.id,
-      userEmail: user.email,
-      items: items.map(i => ({ id: i.id, name: i.name, emoji: i.emoji, price: i.price, qty: i.qty })),
+      email: user.email,
+      items: items.map(i => ({ id: i.id, name: i.name, emoji: i.emoji, images: i.images, price: i.price, qty: i.qty })),
       subtotal,
       shipping,
       total,
@@ -202,7 +210,7 @@ const API = (() => {
       payment: paymentMethod,
       status: 'Processing',
       tracking,
-      createdAt: new Date().toISOString()
+      date: new Date().toISOString()
     };
 
     d.orders.push(order);
@@ -226,7 +234,7 @@ const API = (() => {
     return order;
   }
 
-  // ---------- ADVANCED ADMIN EXTENSIONS ----------
+  // ---------- EXPANDED ADMIN API SUITE ----------
   const admin = {
     async check() {
       await wait();
@@ -236,84 +244,90 @@ const API = (() => {
       }
       return user;
     },
-    async log(adminEmail, action, details) {
+
+    async logAction(action) {
       const d = db();
+      const adminUser = auth.current();
+      if (!d.auditLogs) d.auditLogs = [];
       d.auditLogs.unshift({
         id: Date.now(),
-        adminEmail,
+        timestamp: new Date().toISOString(),
         action,
-        details,
-        createdAt: new Date().toISOString()
+        adminEmail: adminUser ? adminUser.email : 'admin@shopng.ng'
       });
       saveDb(d);
     },
+
     async getAnalytics() {
       await this.check();
       const d = db();
-      const orders = d.orders;
-      const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-      const totalOrders = orders.length;
-      const aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-      const lowStockCount = d.products.filter(p => p.stock < 5).length;
+      const totalRevenue = d.orders.reduce((sum, o) => sum + (o.total || 0), 0);
+      const totalOrders = d.orders.length;
+      const aov = totalOrders ? Math.round(totalRevenue / totalOrders) : 0;
+      const lowStockCount = d.products.filter(p => p.status !== 'deleted' && p.stock <= 5).length;
 
-      // Category breakdown revenue
-      const categorySales = {};
-      orders.forEach(o => {
-        o.items.forEach(item => {
-          const prod = d.products.find(p => p.id === item.id);
-          const cat = prod ? prod.category : 'other';
-          categorySales[cat] = (categorySales[cat] || 0) + (item.price * item.qty);
-        });
-      });
-
-      return { totalRevenue, totalOrders, aov, lowStockCount, categorySales };
+      return { totalRevenue, totalOrders, aov, lowStockCount };
     },
-    async listAllOrders() {
+
+    async listOrders(filterStatus = 'all', searchQuery = '') {
       await this.check();
-      return db().orders;
+      const d = db();
+      let orders = [...d.orders];
+
+      if (filterStatus !== 'all') {
+        orders = orders.filter(o => o.status.toLowerCase() === filterStatus.toLowerCase());
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        orders = orders.filter(o => o.id.toLowerCase().includes(q) || (o.email && o.email.toLowerCase().includes(q)));
+      }
+      return orders;
     },
+
     async updateOrderStatus(orderId, status, tracking) {
-      const user = await this.check();
+      await this.check();
       const d = db();
       const order = d.orders.find(o => o.id === orderId);
       if (!order) fail('Order not found', 404);
       order.status = status;
       if (tracking) order.tracking = tracking;
       saveDb(d);
-      await this.log(user.email, 'Update Order Status', `Order #${orderId} status changed to ${status}`);
+      await this.logAction(`Updated Order #${orderId} status to '${status}'`);
       return order;
     },
+
+    async listProducts(includeDeleted = false) {
+      await this.check();
+      const d = db();
+      if (includeDeleted) return d.products;
+      return d.products.filter(p => p.status !== 'deleted');
+    },
+
     async updateStock(productId, newStock) {
-      const user = await this.check();
+      await this.check();
       const d = db();
       const product = d.products.find(p => p.id === Number(productId));
       if (!product) fail('Product not found', 404);
       product.stock = Math.max(0, Number(newStock));
       saveDb(d);
-      await this.log(user.email, 'Update Stock', `Product ID ${productId} (${product.name}) stock set to ${product.stock}`);
+      await this.logAction(`Updated stock for '${product.name}' to ${product.stock}`);
       return product;
     },
-    async updateProduct(productId, productData) {
-      const user = await this.check();
-      const d = db();
-      const product = d.products.find(p => p.id === Number(productId));
-      if (!product) fail('Product not found', 404);
-      
-      product.name = productData.name !== undefined ? productData.name : product.name;
-      product.brand = productData.brand !== undefined ? productData.brand : product.brand;
-      product.price = productData.price !== undefined ? Number(productData.price) : product.price;
-      product.oldPrice = productData.oldPrice !== undefined ? (productData.oldPrice ? Number(productData.oldPrice) : null) : product.oldPrice;
-      product.stock = productData.stock !== undefined ? Number(productData.stock) : product.stock;
-      product.category = productData.category !== undefined ? productData.category : product.category;
-      product.emoji = productData.emoji !== undefined ? productData.emoji : product.emoji;
-      product.desc = productData.desc !== undefined ? productData.desc : product.desc;
 
+    async updateProduct(productId, updatedData) {
+      await this.check();
+      const d = db();
+      const index = d.products.findIndex(p => p.id === Number(productId));
+      if (index === -1) fail('Product not found', 404);
+
+      d.products[index] = { ...d.products[index], ...updatedData };
       saveDb(d);
-      await this.log(user.email, 'Update Product', `Updated product details for ID ${productId} (${product.name})`);
-      return product;
+      await this.logAction(`Updated product details for '${d.products[index].name}'`);
+      return d.products[index];
     },
+
     async addProduct(productData) {
-      const user = await this.check();
+      await this.check();
       const d = db();
       const newId = d.products.length ? Math.max(...d.products.map(p => p.id)) + 1 : 1;
       const newProduct = {
@@ -328,106 +342,112 @@ const API = (() => {
         emoji: productData.emoji || '📦',
         category: productData.category || 'electronics',
         delivery: productData.delivery || 'Standard Delivery',
-        desc: productData.desc || ''
+        desc: productData.desc || '',
+        images: productData.images || [],
+        status: 'active'
       };
       d.products.push(newProduct);
       saveDb(d);
-      await this.log(user.email, 'Add Product', `Added new product: ${newProduct.name}`);
+      await this.logAction(`Added new product '${newProduct.name}'`);
       return newProduct;
     },
-    async deleteProduct(productId) {
-      const user = await this.check();
+
+    async softDeleteProduct(productId) {
+      await this.check();
       const d = db();
-      const prod = d.products.find(p => p.id === Number(productId));
-      d.products = d.products.filter(p => p.id !== Number(productId));
+      const product = d.products.find(p => p.id === Number(productId));
+      if (!product) fail('Product not found', 404);
+      product.status = 'deleted';
       saveDb(d);
-      await this.log(user.email, 'Delete Product', `Deleted product ID ${productId} (${prod ? prod.name : 'Unknown'})`);
+      await this.logAction(`Moved product '${product.name}' to Trash`);
       return true;
     },
-    async listUsers() {
+
+    async restoreProduct(productId) {
+      await this.check();
+      const d = db();
+      const product = d.products.find(p => p.id === Number(productId));
+      if (!product) fail('Product not found', 404);
+      product.status = 'active';
+      saveDb(d);
+      await this.logAction(`Restored product '${product.name}' from Trash`);
+      return product;
+    },
+
+    async listCustomers() {
       await this.check();
       const d = db();
       return d.users.map(u => {
-        const userOrders = d.orders.filter(o => o.userId === u.id);
+        const userOrders = d.orders.filter(o => o.email === u.email || o.userId === u.id);
         const ltv = userOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-        return {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          isAdmin: u.email === 'admin@shopng.ng' || u.isAdmin,
-          isSuspended: Boolean(u.isSuspended),
-          orderCount: userOrders.length,
-          ltv
-        };
+        return { ...u, orderCount: userOrders.length, ltv };
       });
     },
-    async toggleUserSuspension(userId) {
-      const user = await this.check();
+
+    async toggleUserStatus(userId) {
+      await this.check();
       const d = db();
-      const target = d.users.find(u => u.id === userId);
-      if (!target) fail('User not found', 404);
-      if (target.email === 'admin@shopng.ng') fail('Cannot suspend primary administrator account');
-      target.isSuspended = !target.isSuspended;
+      const user = d.users.find(u => u.id === String(userId) || u.id === Number(userId));
+      if (!user) fail('User not found', 404);
+      user.active = user.active === false ? true : false;
       saveDb(d);
-      await this.log(user.email, 'User Suspension', `Toggled suspension for ${target.email} to ${target.isSuspended}`);
-      return target;
+      await this.logAction(`Toggled account status for '${user.email}' to active: ${user.active}`);
+      return user;
     },
+
     async listReviews() {
       await this.check();
       return db().reviews || [];
     },
-    async updateReviewStatus(reviewId, status) {
-      const user = await this.check();
+
+    async approveReview(reviewId) {
+      await this.check();
       const d = db();
-      const rev = d.reviews.find(r => r.id === Number(reviewId));
-      if (!rev) fail('Review not found', 404);
-      rev.status = status;
-      saveDb(d);
-      await this.log(user.email, 'Review Moderation', `Review #${reviewId} status set to ${status}`);
-      return rev;
+      const r = (d.reviews || []).find(rev => rev.id === Number(reviewId));
+      if (r) {
+        r.approved = true;
+        saveDb(d);
+        await this.logAction(`Approved review #${reviewId}`);
+      }
+      return r;
     },
+
     async deleteReview(reviewId) {
-      const user = await this.check();
+      await this.check();
       const d = db();
       d.reviews = (d.reviews || []).filter(r => r.id !== Number(reviewId));
       saveDb(d);
-      await this.log(user.email, 'Delete Review', `Deleted review #${reviewId}`);
+      await this.logAction(`Deleted review #${reviewId}`);
       return true;
     },
-    async listAuditLogs() {
+
+    async listPromos() {
+      await this.check();
+      return db().promos || [];
+    },
+
+    async addPromo(promoData) {
+      await this.check();
+      const d = db();
+      if (!d.promos) d.promos = [];
+      d.promos.push(promoData);
+      saveDb(d);
+      await this.logAction(`Added promo code '${promoData.code}'`);
+      return promoData;
+    },
+
+    async deletePromo(code) {
+      await this.check();
+      const d = db();
+      d.promos = (d.promos || []).filter(p => p.code !== code);
+      saveDb(d);
+      await this.logAction(`Deleted promo code '${code}'`);
+      return true;
+    },
+
+    async getAuditLogs() {
       await this.check();
       return db().auditLogs || [];
-    },
-    async listShippingZones() {
-      await this.check();
-      return db().shippingZones || [];
-    },
-    async updateShippingZone(id, fee, threshold) {
-      const user = await this.check();
-      const d = db();
-      const zone = d.shippingZones.find(z => z.id === Number(id));
-      if (!zone) fail('Shipping zone not found', 404);
-      zone.fee = Number(fee);
-      zone.freeThreshold = Number(threshold);
-      saveDb(d);
-      await this.log(user.email, 'Update Shipping Zone', `Updated shipping zone ${zone.zone} fee to ${fee}`);
-      return zone;
-    },
-    async exportData(type) {
-      await this.check();
-      const d = db();
-      if (type === 'products') return JSON.stringify(d.products, null, 2);
-      if (type === 'orders') return JSON.stringify(d.orders, null, 2);
-      fail('Invalid export type');
-    },
-    async importProducts(importedArray) {
-      const user = await this.check();
-      const d = db();
-      if (!Array.isArray(importedArray)) fail('Invalid product list format');
-      d.products = importedArray;
-      saveDb(d);
-      await this.log(user.email, 'Bulk Import', `Imported ${importedArray.length} products into catalog`);
-      return true;
     }
   };
 
