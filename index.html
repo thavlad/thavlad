@@ -1,750 +1,142 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SLOT - Nigeria's #1 Electronics & Phone Store</title>
-  <meta name="description" content="Shop the latest phones, laptops, tablets, gadgets, and accessories online at SLOT Nigeria. Best prices, genuine products, fast delivery nationwide.">
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'slot-primary': '#E7000B',
-            'slot-dark': '#B80009',
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Store - Home</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero-slide {
+            transition: opacity 0.5s ease-in-out;
         }
-      }
-    }
-  </script>
-  
-  <!-- Inter Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    /* Hide scrollbars for slick sliders */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-  </style>
+    </style>
 </head>
-<body class="font-sans min-h-screen flex flex-col bg-gray-50 text-gray-800 antialiased">
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
 
-  <!-- TOP BAR (DESKTOP) -->
-  <div class="bg-slot-primary hidden lg:block text-white text-[13px] py-1.5 border-b border-red-700">
-    <div class="max-w-6xl mx-auto flex justify-between items-center px-4">
-      <p class="font-medium">Welcome to Slot Systems Limited</p>
-      <ul class="flex items-center gap-6 font-medium">
-        <li><a class="hover:underline flex items-center gap-1.5" href="#find-store"><i class="fa-solid fa-location-dot"></i> Store Locator</a></li>
-        <li><a class="hover:underline flex items-center gap-1.5" href="#track-order"><i class="fa-solid fa-truck"></i> Track Order</a></li>
-        <li><a class="hover:underline flex items-center gap-1.5" href="tel:+2347005000050"><i class="fa-solid fa-phone"></i> +234 700 500 0050</a></li>
-      </ul>
-    </div>
-  </div>
+    <!-- Header / Navigation -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-bold text-red-600 flex items-center gap-2">
+                <i class="fa-solid fa-bag-shopping"></i> StoreFront
+            </a>
+            
+            <nav class="hidden md:flex space-x-8 font-medium">
+                <a href="index.html" class="text-red-600 hover:text-red-700">Home</a>
+                <a href="shop.html" class="hover:text-red-600">Shop</a>
+                <a href="about.html" class="hover:text-red-600">About</a>
+                <a href="find-a-store.html" class="hover:text-red-600">Find Store</a>
+            </nav>
 
-  <!-- HEADER -->
-  <header class="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
-    <div class="max-w-6xl mx-auto px-4 py-3 lg:py-4 flex items-center justify-between gap-4">
-      
-      <!-- LOGO -->
-      <a href="index.html" class="flex-none flex items-center gap-2">
-        <div class="bg-slot-primary text-white font-black text-2xl tracking-tighter px-2.5 py-1 rounded">SLOT</div>
-        <span class="hidden sm:inline-block text-[10px] uppercase font-bold text-gray-400 leading-tight">Nigeria's #1<br>Electronics</span>
-      </a>
+            <div class="flex items-center space-x-6">
+                <!-- Global Search Input -->
+                <div class="relative hidden sm:block">
+                    <input type="text" id="global-search-input" placeholder="Search products..." class="w-48 lg:w-64 pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-red-600">
+                    <div id="search-results-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden z-50 max-h-60 overflow-y-auto"></div>
+                </div>
 
-      <!-- SEARCH BAR -->
-      <div class="flex-1 max-w-xl mx-2 sm:mx-4">
-        <form onsubmit="event.preventDefault(); handleSearch();" class="relative flex items-center">
-          <input type="text" id="searchInput" placeholder="Search for phones, laptops, power stations..." class="w-full pl-4 pr-10 py-2 text-sm bg-gray-100 border border-gray-200 rounded-full focus:outline-none focus:border-slot-primary focus:bg-white transition-all">
-          <button type="submit" class="absolute right-3 text-gray-400 hover:text-slot-primary">
-            <i class="fa-solid fa-magnifying-glass"></i>
-          </button>
-        </form>
-      </div>
+                <a href="cart.html" class="relative text-gray-700 hover:text-red-600">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                    <span class="cart-count-badge absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </a>
 
-      <!-- HEADER ACTION ICONS -->
-      <div class="flex items-center gap-4 sm:gap-6 text-gray-700">
-        <!-- Wishlist -->
-        <button onclick="toggleWishlistModal()" class="relative flex items-center hover:text-slot-primary transition-colors">
-          <i class="fa-regular fa-heart text-xl"></i>
-          <span id="wishlistCount" class="absolute -top-2 -right-2 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-slot-primary rounded-full">0</span>
-        </button>
-
-        <!-- User Profile -->
-        <a href="#login" class="flex items-center hover:text-slot-primary transition-colors">
-          <i class="fa-regular fa-user text-xl"></i>
-        </a>
-
-        <!-- Cart Icon -->
-        <button onclick="toggleCartDrawer()" class="relative flex items-center hover:text-slot-primary transition-colors">
-          <i class="fa-solid fa-cart-shopping text-xl"></i>
-          <span id="cartCount" class="absolute -top-2 -right-2 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-slot-primary rounded-full">0</span>
-        </button>
-
-        <!-- Mobile Menu Button -->
-        <button onclick="toggleMobileMenu()" class="lg:hidden text-2xl text-gray-700 hover:text-slot-primary">
-          <i class="fa-solid fa-bars"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- MAIN NAV (DESKTOP) -->
-    <div class="bg-slot-primary hidden lg:block">
-      <nav class="max-w-6xl mx-auto flex h-10 items-center gap-1 px-4 text-sm font-semibold text-white">
-        <a class="px-4 h-full flex items-center bg-black/10 border-b-2 border-white" href="index.html">Home</a>
-        <a class="px-4 h-full flex items-center hover:bg-black/10 transition-colors" href="#exclusive">Exclusive Deals</a>
-        <a class="px-4 h-full flex items-center hover:bg-black/10 transition-colors" href="#phones">Smartphones</a>
-        <a class="px-4 h-full flex items-center hover:bg-black/10 transition-colors" href="#power">Power Solutions</a>
-        <a class="px-4 h-full flex items-center hover:bg-black/10 transition-colors" href="#about">About Us</a>
-        <a class="px-4 h-full flex items-center hover:bg-black/10 transition-colors" href="#franchise">Franchise</a>
-        <a class="px-4 h-full flex items-center hover:bg-black/10 transition-colors" href="#corporate">Corporate Sales</a>
-      </nav>
-    </div>
-
-    <!-- MOBILE MENU DRAWER -->
-    <div id="mobileMenu" class="hidden lg:hidden bg-white border-b border-gray-200 px-4 py-3 space-y-2 text-sm font-semibold">
-      <a class="block py-2 text-slot-primary border-b border-gray-100" href="index.html">Home</a>
-      <a class="block py-2 text-gray-700 hover:text-slot-primary border-b border-gray-100" href="#exclusive">Exclusive Deals</a>
-      <a class="block py-2 text-gray-700 hover:text-slot-primary border-b border-gray-100" href="#phones">Smartphones</a>
-      <a class="block py-2 text-gray-700 hover:text-slot-primary border-b border-gray-100" href="#power">Power Solutions</a>
-      <a class="block py-2 text-gray-700 hover:text-slot-primary border-b border-gray-100" href="#about">About Us</a>
-      <a class="block py-2 text-gray-700 hover:text-slot-primary border-b border-gray-100" href="#franchise">Franchise</a>
-      <a class="block py-2 text-gray-700 hover:text-slot-primary" href="#corporate">Corporate Sales</a>
-    </div>
-  </header>
-
-  <main class="flex-grow">
-    <!-- HERO SLIDER SECTION -->
-    <section class="relative w-full bg-gray-900 max-w-7xl mx-auto overflow-hidden">
-      <div id="heroSlider" class="relative w-full h-[220px] sm:h-[350px] md:h-[420px]">
-        <!-- Slide 1 -->
-        <div class="slide absolute inset-0 transition-opacity duration-700 opacity-100 flex items-center justify-between bg-gradient-to-r from-red-900 via-red-800 to-black p-6 md:p-12 text-white">
-          <div class="max-w-lg z-10">
-            <span class="bg-red-600 text-xs font-bold uppercase px-2.5 py-1 rounded-full mb-3 inline-block">Flash Sale</span>
-            <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-2">iPhone 16 Pro Max</h1>
-            <p class="text-xs sm:text-base text-gray-200 mb-4 sm:mb-6">Experience ultimate performance, camera upgrades, and all-day battery life.</p>
-            <a href="#exclusive" class="bg-white text-slot-primary font-bold px-5 py-2.5 rounded-md hover:bg-gray-100 transition-colors shadow-lg text-sm sm:text-base inline-block">Shop Now</a>
-          </div>
-          <div class="hidden sm:flex items-center justify-center w-1/2 h-full">
-            <img src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80" alt="iPhone 16 Pro Max" class="h-4/5 object-contain rounded-lg shadow-2xl">
-          </div>
-        </div>
-
-        <!-- Slide 2 -->
-        <div class="slide absolute inset-0 transition-opacity duration-700 opacity-0 flex items-center justify-between bg-gradient-to-r from-gray-900 via-blue-900 to-black p-6 md:p-12 text-white">
-          <div class="max-w-lg z-10">
-            <span class="bg-blue-600 text-xs font-bold uppercase px-2.5 py-1 rounded-full mb-3 inline-block">Power & Backup</span>
-            <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-2">EcoFlow Power Stations</h1>
-            <p class="text-xs sm:text-base text-gray-200 mb-4 sm:mb-6">Reliable, fast-charging solar and battery solutions for home & enterprise.</p>
-            <a href="#power" class="bg-slot-primary text-white font-bold px-5 py-2.5 rounded-md hover:bg-red-700 transition-colors shadow-lg text-sm sm:text-base inline-block">Explore Power Solutions</a>
-          </div>
-          <div class="hidden sm:flex items-center justify-center w-1/2 h-full">
-            <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&auto=format&fit=crop&q=80" alt="EcoFlow Station" class="h-4/5 object-contain rounded-lg shadow-2xl">
-          </div>
-        </div>
-      </div>
-
-      <!-- Slide Indicators -->
-      <div class="absolute bottom-4 left-0 right-0 z-20 flex items-center justify-center gap-2">
-        <button onclick="setSlide(0)" class="dot h-2.5 w-8 rounded-full bg-white transition-all"></button>
-        <button onclick="setSlide(1)" class="dot h-2.5 w-2.5 rounded-full bg-white/50 hover:bg-white transition-all"></button>
-      </div>
-    </section>
-
-    <!-- CORPORATE BULK SALES BANNER -->
-    <section class="px-4 max-w-6xl mx-auto my-6">
-      <div class="rounded-lg bg-white border border-gray-100 p-4 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-red-50 text-slot-primary flex items-center justify-center text-lg flex-shrink-0">
-              <i class="fa-solid fa-briefcase"></i>
+                <button class="mobile-menu-toggle md:hidden text-gray-700 text-xl focus:outline-none">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
             </div>
-            <p class="text-sm sm:text-base text-gray-700">
-              Special offers on bulk and corporate <span class="font-bold text-slot-primary">SLOT</span> sales & procurement.
-            </p>
-          </div>
-          <button onclick="openCorporateModal()" class="inline-flex items-center gap-2 bg-slot-primary hover:bg-red-700 text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-md transition-all shadow-sm shrink-0">
-            Request Quote <i class="fa-solid fa-chevron-right text-xs"></i>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- EXCLUSIVE OFFERS SECTION -->
-    <section id="exclusive" class="bg-white py-8 border-t border-b border-gray-100">
-      <div class="max-w-6xl mx-auto px-4">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-6 bg-slot-primary rounded-full"></div>
-            <h2 class="font-bold text-lg md:text-xl text-gray-900">Exclusive Offers</h2>
-          </div>
-          <a href="#shop" class="text-xs sm:text-sm font-semibold text-slot-primary hover:text-red-700 border border-red-200 hover:border-slot-primary px-3 py-1 rounded-md transition-colors">See all</a>
         </div>
 
-        <!-- Product Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="exclusiveProducts">
-          <!-- Rendered dynamically -->
+        <!-- Mobile Navigation Menu -->
+        <div class="nav-links hidden md:hidden bg-white border-t border-gray-200 px-4 py-3 space-y-2">
+            <a href="index.html" class="block font-medium text-red-600">Home</a>
+            <a href="shop.html" class="block font-medium hover:text-red-600">Shop</a>
+            <a href="about.html" class="block font-medium hover:text-red-600">About</a>
+            <a href="find-a-store.html" class="block font-medium hover:text-red-600">Find Store</a>
         </div>
-      </div>
-    </section>
+    </header>
 
-    <!-- NOW AVAILABLE / POWER SOLUTIONS SECTION -->
-    <section id="power" class="bg-gray-100 py-8">
-      <div class="max-w-6xl mx-auto px-4">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-6 bg-blue-600 rounded-full"></div>
-            <h2 class="font-bold text-lg md:text-xl text-gray-900">Now Available & Power Solutions</h2>
-          </div>
-          <a href="#shop" class="text-xs sm:text-sm font-semibold text-slot-primary hover:text-red-700 border border-red-200 hover:border-slot-primary px-3 py-1 rounded-md transition-colors">See all</a>
-        </div>
-
-        <!-- Product Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="powerProducts">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- CART SIDEBAR DRAWER -->
-  <div id="cartDrawer" class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
-    <div onclick="toggleCartDrawer()" class="absolute inset-0 bg-black/50 pointer-events-auto"></div>
-    <div class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl pointer-events-auto flex flex-col justify-between transform translate-x-full transition-transform duration-300" id="cartDrawerContent">
-      <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-        <h3 class="font-bold text-lg flex items-center gap-2 text-gray-800">
-          <i class="fa-solid fa-cart-shopping text-slot-primary"></i> Shopping Cart
-        </h3>
-        <button onclick="toggleCartDrawer()" class="text-gray-400 hover:text-gray-600 p-1">
-          <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
-      </div>
-
-      <div class="flex-1 overflow-y-auto p-4 space-y-4" id="cartItemsContainer">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div class="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
-        <div class="flex justify-between items-center text-sm">
-          <span class="text-gray-600 font-medium">Subtotal</span>
-          <span id="cartSubtotal" class="font-bold text-base text-gray-900">₦0</span>
-        </div>
-        <p class="text-xs text-gray-500">Taxes and shipping calculated at checkout.</p>
-        <button onclick="checkout()" class="w-full bg-slot-primary hover:bg-red-700 text-white font-bold py-3 rounded-md transition-colors shadow-md">
-          Proceed to Checkout
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- QUICK VIEW MODAL -->
-  <div id="quickViewModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-    <div class="bg-white rounded-xl max-w-2xl w-full overflow-hidden shadow-2xl relative animate-fade-in">
-      <button onclick="closeQuickView()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-      <div class="grid grid-cols-1 md:grid-cols-2 p-6 gap-6" id="quickViewContent">
-        <!-- Rendered dynamically -->
-      </div>
-    </div>
-  </div>
-
-  <!-- CORPORATE SALES MODAL -->
-  <div id="corporateModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl relative">
-      <button onclick="closeCorporateModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-      <h3 class="font-bold text-xl text-gray-900 mb-2">Corporate & Bulk Orders</h3>
-      <p class="text-xs text-gray-500 mb-4">Fill in your requirements and our B2B team will contact you shortly.</p>
-      
-      <form onsubmit="handleCorporateSubmit(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Company / Organization Name</label>
-          <input type="text" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-slot-primary">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Contact Name</label>
-            <input type="text" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-slot-primary">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Phone Number</label>
-            <input type="tel" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-slot-primary">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Product Details & Quantity</label>
-          <textarea rows="3" required placeholder="e.g. 15 units of iPhone 15 Pro, 2 EcoFlow Stations..." class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-slot-primary"></textarea>
-        </div>
-        <button type="submit" class="w-full bg-slot-primary hover:bg-red-700 text-white font-bold py-2.5 rounded-md text-sm transition-colors">
-          Submit Quote Request
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- NOTIFICATION TOAST -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-xl text-sm flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300">
-    <i class="fa-solid fa-circle-check text-green-400" id="toastIcon"></i>
-    <span id="toastMsg">Action successful</span>
-  </div>
-
-  <!-- FOOTER -->
-  <footer class="bg-gray-900 text-gray-400 text-xs py-10 border-t border-gray-800">
-    <div class="max-w-6xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-      <div>
-        <div class="bg-slot-primary text-white font-black text-xl px-2 py-0.5 rounded inline-block mb-3">SLOT</div>
-        <p class="leading-relaxed mb-4">SLOT Systems Limited is Nigeria's leading retailer of original mobile phones, computers, power solutions, and genuine accessories with nationwide delivery.</p>
-        <div class="flex gap-3 text-base">
-          <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white hover:bg-slot-primary transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white hover:bg-slot-primary transition-colors"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white hover:bg-slot-primary transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
-        </div>
-      </div>
-      <div>
-        <h4 class="font-bold text-white text-sm mb-3">Quick Links</h4>
-        <ul class="space-y-2">
-          <li><a href="#about" class="hover:text-white transition-colors">About Us</a></li>
-          <li><a href="#find-store" class="hover:text-white transition-colors">Store Locator</a></li>
-          <li><a href="#franchise" class="hover:text-white transition-colors">Franchise Program</a></li>
-          <li><a href="#corporate" class="hover:text-white transition-colors">Corporate Sales</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold text-white text-sm mb-3">Customer Care</h4>
-        <ul class="space-y-2">
-          <li><a href="#" class="hover:text-white transition-colors">Warranty Policy</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Return Policy</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Shipping & Delivery</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">FAQs</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold text-white text-sm mb-3">Contact Us</h4>
-        <p class="mb-2"><i class="fa-solid fa-location-dot mr-2"></i> 203 Obafemi Awolowo Way, Ikeja, Lagos, Nigeria.</p>
-        <p class="mb-2"><i class="fa-solid fa-phone mr-2"></i> +234 700 500 0050</p>
-        <p><i class="fa-solid fa-envelope mr-2"></i> info@slot.ng</p>
-      </div>
-    </div>
-    <div class="max-w-6xl mx-auto px-4 mt-8 pt-4 border-t border-gray-800 text-center text-gray-500">
-      &copy; 2026 SLOT Systems Limited. All Rights Reserved.
-    </div>
-  </footer>
-
-  <!-- APPLICATION LOGIC -->
-  <script>
-    // PRODUCT DATA
-    const products = [
-      {
-        id: 1,
-        title: "APPLE IPHONE 13 PRO MAX 128GB SS",
-        price: 600000,
-        formattedPrice: "₦600,000",
-        image: "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&auto=format&fit=crop&q=80",
-        status: "In stock",
-        statusBg: "bg-green-500",
-        category: "exclusive",
-        type: "buy"
-      },
-      {
-        id: 2,
-        title: "APPLE IPHONE 14 PRO 256GB SS",
-        price: 700000,
-        formattedPrice: "₦700,000",
-        image: "https://images.unsplash.com/photo-1663499482523-1c0c1bae4ce1?w=400&auto=format&fit=crop&q=80",
-        status: "Request",
-        statusBg: "bg-orange-500",
-        category: "exclusive",
-        type: "whatsapp"
-      },
-      {
-        id: 3,
-        title: "APPLE IPHONE 15 PRO 1TB SS",
-        price: 1200000,
-        formattedPrice: "₦1,200,000",
-        image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&auto=format&fit=crop&q=80",
-        status: "In stock",
-        statusBg: "bg-green-500",
-        category: "exclusive",
-        type: "buy"
-      },
-      {
-        id: 4,
-        title: "APPLE IPHONE 15 PRO MAX 256GB SS",
-        price: 1050000,
-        formattedPrice: "₦1,050,000",
-        image: "https://images.unsplash.com/photo-1695048065057-07ab59132149?w=400&auto=format&fit=crop&q=80",
-        status: "In stock",
-        statusBg: "bg-green-500",
-        category: "exclusive",
-        type: "buy"
-      },
-      {
-        id: 5,
-        title: "APPLE IPHONE 16 PRO MAX 512GB",
-        price: 2346000,
-        formattedPrice: "₦2,346,000",
-        image: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400&auto=format&fit=crop&q=80",
-        status: "In stock",
-        statusBg: "bg-green-500",
-        category: "exclusive",
-        type: "buy"
-      },
-      {
-        id: 6,
-        title: "ECOFLOW DELTA PRO EB",
-        price: 1882000,
-        formattedPrice: "₦1,882,000",
-        image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=400&auto=format&fit=crop&q=80",
-        status: "In stock",
-        statusBg: "bg-green-500",
-        category: "power",
-        type: "buy"
-      },
-      {
-        id: 7,
-        title: "APPLE IPHONE 18 PRO MAX 256GB",
-        price: 2652000,
-        formattedPrice: "₦2,652,000",
-        image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&auto=format&fit=crop&q=80",
-        status: "In stock",
-        statusBg: "bg-green-500",
-        category: "power",
-        type: "buy"
-      },
-      {
-        id: 8,
-        title: "APPLE IPHONE 18 PRO MAX 2TB",
-        price: 4535000,
-        formattedPrice: "₦4,535,000",
-        image: "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=400&auto=format&fit=crop&q=80",
-        status: "In stock",
-        statusBg: "bg-green-500",
-        category: "power",
-        type: "buy"
-      },
-      {
-        id: 9,
-        title: "APPLE IPHONE 18 PRO 512GB",
-        price: 2546000,
-        formattedPrice: "₦2,546,000",
-        image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&auto=format&fit=crop&q=80",
-        status: "Request",
-        statusBg: "bg-orange-500",
-        category: "power",
-        type: "whatsapp"
-      },
-      {
-        id: 10,
-        title: "ECOFLOW DELTA 3 ULTRA",
-        price: 2245000,
-        formattedPrice: "₦2,245,000",
-        image: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=400&auto=format&fit=crop&q=80",
-        status: "Request",
-        statusBg: "bg-orange-500",
-        category: "power",
-        type: "whatsapp"
-      }
-    ];
-
-    // STATE MANAGEMENT
-    let cart = [];
-    let wishlist = [];
-    let currentSlide = 0;
-
-    // RENDER PRODUCTS
-    function renderProducts() {
-      const exclusiveContainer = document.getElementById('exclusiveProducts');
-      const powerContainer = document.getElementById('powerProducts');
-
-      const exclusiveList = products.filter(p => p.category === 'exclusive');
-      const powerList = products.filter(p => p.category === 'power');
-
-      exclusiveContainer.innerHTML = exclusiveList.map(p => createProductCardHTML(p)).join('');
-      powerContainer.innerHTML = powerList.map(p => createProductCardHTML(p)).join('');
-    }
-
-    function createProductCardHTML(p) {
-      const isWishlisted = wishlist.includes(p.id);
-      const actionButton = p.type === 'buy' 
-        ? `<button onclick="addToCart(${p.id})" class="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-slot-primary text-white hover:bg-red-700 transition-colors" title="Add to Cart">
-            <i class="fa-solid fa-cart-plus text-xs"></i>
-           </button>`
-        : `<a href="https://wa.me/2347005000050?text=Hi%2C%20I'd%20like%20to%20request%20%22${encodeURIComponent(p.title)}%22" target="_blank" class="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors" title="Request on WhatsApp">
-            <i class="fa-brands fa-whatsapp text-xs"></i>
-           </a>`;
-
-      return `
-        <div class="group flex flex-col rounded-lg border border-gray-100 bg-white hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden">
-          <div class="relative aspect-square bg-gray-50 p-2 overflow-hidden cursor-pointer" onclick="openQuickView(${p.id})">
-            <img src="${p.image}" alt="${p.title}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
-            <span class="absolute top-2 right-2 ${p.statusBg} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">${p.status}</span>
-          </div>
-          <div class="px-3 pt-2 pb-1 flex-1">
-            <p class="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 leading-snug cursor-pointer hover:text-slot-primary" onclick="openQuickView(${p.id})">${p.title}</p>
-          </div>
-          <div class="flex items-center justify-between gap-2 px-3 py-2 mt-0.5">
-            <span class="text-xs sm:text-sm font-bold text-slot-primary">${p.formattedPrice}</span>
-            ${actionButton}
-          </div>
-          <div class="border-t border-gray-100 py-1.5 flex items-center justify-around bg-gray-50/50">
-            <button onclick="openQuickView(${p.id})" class="flex items-center gap-1 text-[11px] text-gray-500 hover:text-slot-primary transition-colors">
-              <i class="fa-regular fa-eye"></i> Quick View
-            </button>
-            <div class="w-px h-3 bg-gray-200"></div>
-            <button onclick="toggleWishlist(${p.id})" class="flex items-center gap-1 text-[11px] ${isWishlisted ? 'text-slot-primary' : 'text-gray-500'} hover:text-slot-primary transition-colors">
-              <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i> Wishlist
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    // SLIDER CONTROLS
-    function setSlide(index) {
-      const slides = document.querySelectorAll('#heroSlider .slide');
-      const dots = document.querySelectorAll('.dot');
-      slides.forEach((slide, idx) => {
-        if(idx === index) {
-          slide.classList.remove('opacity-0');
-          slide.classList.add('opacity-100');
-        } else {
-          slide.classList.remove('opacity-100');
-          slide.classList.add('opacity-0');
-        }
-      });
-      dots.forEach((dot, idx) => {
-        if(idx === index) {
-          dot.classList.remove('w-2.5', 'bg-white/50');
-          dot.classList.add('w-8', 'bg-white');
-        } else {
-          dot.classList.remove('w-8', 'bg-white');
-          dot.classList.add('w-2.5', 'bg-white/50');
-        }
-      });
-      currentSlide = index;
-    }
-
-    function autoSlide() {
-      currentSlide = (currentSlide + 1) % 2;
-      setSlide(currentSlide);
-    }
-    setInterval(autoSlide, 5000);
-
-    // CART MANAGEMENT
-    function addToCart(id) {
-      const product = products.find(p => p.id === id);
-      const existing = cart.find(item => item.id === id);
-      if(existing) {
-        existing.qty += 1;
-      } else {
-        cart.push({...product, qty: 1});
-      }
-      updateCartUI();
-      showToast(`Added "${product.title}" to cart`);
-    }
-
-    function updateCartQty(id, delta) {
-      const item = cart.find(i => i.id === id);
-      if(item) {
-        item.qty += delta;
-        if(item.qty <= 0) {
-          cart = cart.filter(i => i.id !== id);
-        }
-      }
-      updateCartUI();
-    }
-
-    function updateCartUI() {
-      const cartCount = document.getElementById('cartCount');
-      const totalItems = cart.reduce((acc, i) => acc + i.qty, 0);
-      cartCount.innerText = totalItems;
-
-      const container = document.getElementById('cartItemsContainer');
-      const subtotalEl = document.getElementById('cartSubtotal');
-
-      if(cart.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12 text-gray-400">
-            <i class="fa-solid fa-cart-arrow-down text-4xl mb-3"></i>
-            <p class="text-sm font-medium">Your cart is empty</p>
-          </div>
-        `;
-        subtotalEl.innerText = "₦0";
-        return;
-      }
-
-      let subtotal = 0;
-      container.innerHTML = cart.map(item => {
-        subtotal += item.price * item.qty;
-        return `
-          <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
-            <img src="${item.image}" alt="${item.title}" class="w-14 h-14 object-contain rounded bg-gray-50 border border-gray-100">
-            <div class="flex-1">
-              <h4 class="text-xs font-semibold text-gray-800 line-clamp-1">${item.title}</h4>
-              <p class="text-xs font-bold text-slot-primary mt-0.5">${item.formattedPrice}</p>
-              <div class="flex items-center gap-2 mt-2">
-                <button onclick="updateCartQty(${item.id}, -1)" class="w-5 h-5 rounded bg-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-300 flex items-center justify-center">-</button>
-                <span class="text-xs font-bold px-1">${item.qty}</span>
-                <button onclick="updateCartQty(${item.id}, 1)" class="w-5 h-5 rounded bg-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-300 flex items-center justify-center">+</button>
-              </div>
+    <!-- Hero Carousel / Banner Slider Container -->
+    <section class="relative w-full overflow-hidden bg-gray-900 text-white min-h-[400px]">
+        <!-- Hero Slide 1 -->
+        <div class="hero-slide w-full h-[450px] bg-gradient-to-r from-gray-900 to-red-900 flex items-center justify-center p-8 text-center">
+            <div class="max-w-2xl">
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Latest Tech & Accessories</h1>
+                <p class="text-lg text-gray-200 mb-6">Discover premium gadgets and fast delivery straight to your doorstep.</p>
+                <a href="shop.html" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg transition">Shop Now</a>
             </div>
-            <button onclick="updateCartQty(${item.id}, -${item.qty})" class="text-gray-400 hover:text-red-500 text-sm">
-              <i class="fa-regular fa-trash-can"></i>
-            </button>
-          </div>
-        `;
-      }).join('');
-
-      subtotalEl.innerText = `₦${subtotal.toLocaleString()}`;
-    }
-
-    function toggleCartDrawer() {
-      const drawer = document.getElementById('cartDrawer');
-      const content = document.getElementById('cartDrawerContent');
-      if(drawer.classList.contains('opacity-0')) {
-        drawer.classList.remove('opacity-0', 'pointer-events-none');
-        content.classList.remove('translate-x-full');
-      } else {
-        drawer.classList.add('opacity-0', 'pointer-events-none');
-        content.classList.add('translate-x-full');
-      }
-    }
-
-    function checkout() {
-      if(cart.length === 0) {
-        showToast("Your cart is empty!", "error");
-        return;
-      }
-      showToast("Order placed successfully! Thank you for shopping with SLOT.");
-      cart = [];
-      updateCartUI();
-      toggleCartDrawer();
-    }
-
-    // WISHLIST MANAGEMENT
-    function toggleWishlist(id) {
-      const index = wishlist.indexOf(id);
-      const product = products.find(p => p.id === id);
-      if(index > -1) {
-        wishlist.splice(index, 1);
-        showToast(`Removed from wishlist`);
-      } else {
-        wishlist.push(id);
-        showToast(`Added "${product.title}" to wishlist`);
-      }
-      document.getElementById('wishlistCount').innerText = wishlist.length;
-      renderProducts();
-    }
-
-    // QUICK VIEW MODAL
-    function openQuickView(id) {
-      const p = products.find(item => item.id === id);
-      const container = document.getElementById('quickViewContent');
-      container.innerHTML = `
-        <div class="aspect-square bg-gray-50 rounded-lg p-4 flex items-center justify-center border border-gray-100">
-          <img src="${p.image}" alt="${p.title}" class="max-h-full max-w-full object-contain">
         </div>
-        <div class="flex flex-col justify-between space-y-4">
-          <div>
-            <span class="${p.statusBg} text-white text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block mb-2">${p.status}</span>
-            <h3 class="text-lg font-bold text-gray-900 leading-snug">${p.title}</h3>
-            <p class="text-xl font-extrabold text-slot-primary mt-2">${p.formattedPrice}</p>
-            <p class="text-xs text-gray-500 mt-3 leading-relaxed">
-              Genuine manufacturer product with standard official warranty, nationwide store support, and fast delivery across Nigeria.
-            </p>
-          </div>
-          <div class="space-y-2">
-            ${p.type === 'buy' ? 
-              `<button onclick="addToCart(${p.id}); closeQuickView();" class="w-full bg-slot-primary hover:bg-red-700 text-white font-bold py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2">
-                <i class="fa-solid fa-cart-plus"></i> Add to Cart
-               </button>` :
-              `<a href="https://wa.me/2347005000050?text=Hi%2C%20I'd%20like%20to%20request%20%22${encodeURIComponent(p.title)}%22" target="_blank" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2">
-                <i class="fa-brands fa-whatsapp"></i> Request on WhatsApp
-               </a>`
-            }
-          </div>
+
+        <!-- Hero Slide 2 -->
+        <div class="hero-slide w-full h-[450px] bg-gradient-to-r from-slate-900 to-blue-900 flex items-center justify-center p-8 text-center" style="display: none;">
+            <div class="max-w-2xl">
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4">New Season Arrival</h1>
+                <p class="text-lg text-gray-200 mb-6">Upgrade your lifestyle with modern design and high performance.</p>
+                <a href="shop.html" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg transition">Explore Store</a>
+            </div>
         </div>
-      `;
-      document.getElementById('quickViewModal').classList.remove('hidden');
-    }
 
-    function closeQuickView() {
-      document.getElementById('quickViewModal').classList.add('hidden');
-    }
+        <!-- Carousel Navigation Controls -->
+        <button id="slider-prev" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white p-3 rounded-full focus:outline-none">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button id="slider-next" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white p-3 rounded-full focus:outline-none">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </section>
 
-    // CORPORATE MODAL
-    function openCorporateModal() {
-      document.getElementById('corporateModal').classList.remove('hidden');
-    }
-    function closeCorporateModal() {
-      document.getElementById('corporateModal').classList.add('hidden');
-    }
-    function handleCorporateSubmit(e) {
-      e.preventDefault();
-      closeCorporateModal();
-      showToast("Quote request submitted successfully!");
-    }
+    <!-- Featured Products Section -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900">Featured Products</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="product-grid">
+            
+            <!-- Product Card 1 -->
+            <div class="product-card bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col justify-between" data-id="1" data-name="iPhone 13 Pro Max" data-price="1099.00" data-category="mobile">
+                <div>
+                    <img src="https://placehold.co/400x300/f3f4f6/1f2937?text=iPhone+13+Pro" alt="iPhone 13 Pro Max" class="zoomable-img w-full h-48 object-cover rounded-lg mb-4 cursor-pointer">
+                    <h3 class="font-semibold text-lg text-gray-900 mb-1">iPhone 13 Pro Max</h3>
+                    <p class="text-gray-500 text-sm mb-3">128GB - Super Retina XDR</p>
+                </div>
+                <div>
+                    <div class="text-xl font-bold text-gray-900 mb-3">$1,099.00</div>
+                    <button class="add-to-cart-btn w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
 
-    // SEARCH & UTILS
-    function handleSearch() {
-      const q = document.getElementById('searchInput').value.toLowerCase().trim();
-      if(!q) return;
-      const filtered = products.filter(p => p.title.toLowerCase().includes(q));
-      if(filtered.length > 0) {
-        showToast(`Found ${filtered.length} products`);
-      } else {
-        showToast(`No products matching "${q}"`, "error");
-      }
-    }
+            <!-- Product Card 2 -->
+            <div class="product-card bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col justify-between" data-id="2" data-name="4-in-1 Fast Adapter" data-price="29.99" data-category="accessories">
+                <div>
+                    <img src="https://placehold.co/400x300/f3f4f6/1f2937?text=Fast+Adapter" alt="4-in-1 Fast Adapter" class="zoomable-img w-full h-48 object-cover rounded-lg mb-4 cursor-pointer">
+                    <h3 class="font-semibold text-lg text-gray-900 mb-1">4-in-1 Fast Charging Cable</h3>
+                    <p class="text-gray-500 text-sm mb-3">Multi-port universal adapter</p>
+                </div>
+                <div>
+                    <div class="text-xl font-bold text-gray-900 mb-3">$29.99</div>
+                    <button class="add-to-cart-btn w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
 
-    function toggleMobileMenu() {
-      const menu = document.getElementById('mobileMenu');
-      menu.classList.toggle('hidden');
-    }
+        </div>
+    </main>
 
-    function showToast(msg, type = "success") {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toastMsg');
-      const toastIcon = document.getElementById('toastIcon');
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>&copy; 2026 E-Commerce Storefront. All rights reserved.</p>
+        </div>
+    </footer>
 
-      toastMsg.innerText = msg;
-      if(type === "error") {
-        toastIcon.className = "fa-solid fa-circle-xmark text-red-400";
-      } else {
-        toastIcon.className = "fa-solid fa-circle-check text-green-400";
-      }
-
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 3000);
-    }
-
-    // INITIAL LOAD
-    window.onload = function() {
-      renderProducts();
-      updateCartUI();
-    };
-  </script>
+    <!-- Clean Modular JavaScript Files (Include Order Managed) -->
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/hero-slider.js"></script>
+    <script src="js/search-autocomplete.js"></script>
+    <script src="js/lightbox-zoom.js"></script>
+    <script src="js/shop.js"></script>
 </body>
 </html>
