@@ -3,17 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product – ShopNG</title>
+  <title>Product Details – ShopNG</title>
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
   <div id="app-header"></div>
 
   <main class="container">
-    <nav class="crumbs" id="crumbs"></nav>
-
     <div class="product" id="product">
-      <p class="muted">Loading…</p>
+      <p class="muted">Loading product details…</p>
     </div>
 
     <section class="section-block">
@@ -29,75 +27,85 @@
   <script src="assets/js/integrations.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/layout.js"></script>
+
   <script>
     (async function () {
-      initLayout('home');
-      const root = document.getElementById('product');
+      initLayout();
+
+      const id = param('id');
+      if (!id) {
+        window.location.href = 'index.html';
+        return;
+      }
 
       try {
-        const p = await API.getProduct(param('id'));
-        const inStock = p.stock > 0;
-        document.title = `${p.name} – ShopNG`;
-        document.getElementById('crumbs').innerHTML =
-          `<a href="index.html">Home</a> / ` +
-          `<a href="listing.html?cat=${p.category}">${esc(catName(p.category))}</a> / ` +
-          `<span>${esc(p.name)}</span>`;
+        const product = await API.getProduct(id);
+        const container = document.getElementById('product');
 
-        root.innerHTML = `
-          <div class="product-img">${p.emoji}</div>
+        const images = product.images && product.images.length > 0 ? product.images : [];
+        const mainDisplay = images.length > 0 
+          ? `<img id="main-product-img" src="${esc(images[0])}" alt="${esc(product.name)}" style="width:100%; max-height:350px; object-fit:contain; border-radius:12px;">` 
+          : `<span style="font-size:120px;">${product.emoji}</span>`;
+
+        const thumbnailsHtml = images.length > 1 
+          ? `<div style="display:flex; gap:8px; margin-top:14px; justify-content:center; flex-wrap:wrap;">` + 
+              images.slice(0, 6).map((img) => `
+                <img src="${esc(img)}" onclick="document.getElementById('main-product-img').src='${esc(img)}'" style="width:54px; height:54px; object-fit:cover; border-radius:10px; cursor:pointer; border:2px solid var(--border);">
+              `).join('') + 
+            `</div>` 
+          : '';
+
+        container.innerHTML = `
+          <div class="product-img" style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f9fafb; padding:15px; border-radius:16px;">
+            ${mainDisplay}
+            ${thumbnailsHtml}
+          </div>
           <div class="product-info">
-            <p class="brand">${esc(p.brand)}</p>
-            <h1>${esc(p.name)}</h1>
-            <div class="rating">⭐ ${p.rating} · ${p.sold} sold</div>
+            <div class="brand">${esc(product.brand)}</div>
+            <h1>${esc(product.name)}</h1>
+            <div class="rating">⭐ ${product.rating} · ${product.sold} sold</div>
             <div class="price-row">
-              <span class="price">${fmt(p.price)}</span>${p.oldPrice ? `<s class="old">${fmt(p.oldPrice)}</s>` : ''}
+              <span class="price">${fmt(product.price)}</span>
+              ${product.oldPrice ? `<s class="old">${fmt(product.oldPrice)}</s>` : ''}
             </div>
-            <p class="delivery">${esc(p.delivery)}</p>
-            <p class="stock ${inStock ? 'ok' : 'out'}">
-              ${inStock ? (p.stock <= 5 ? `Only ${p.stock} left in stock` : 'In stock') : 'Out of stock'}
-            </p>
-            <p class="desc">${esc(p.desc)}</p>
+            <div class="stock ${product.stock > 0 ? 'ok' : 'out'}">
+              ${product.stock > 0 ? `In Stock (${product.stock} left)` : 'Out of Stock'}
+            </div>
+            <p class="desc">${esc(product.desc)}</p>
             <div class="qty-row">
-              <button class="qty-btn" id="dec" aria-label="Decrease quantity">−</button>
-              <span id="qty">1</span>
-              <button class="qty-btn" id="inc" aria-label="Increase quantity">+</button>
+              <button class="qty-btn" onclick="changeQty(-1)">-</button>
+              <span id="qty-val" style="font-weight:700;">1</span>
+              <button class="qty-btn" onclick="changeQty(1)">+</button>
             </div>
-            <button class="btn btn-block" id="add" ${inStock ? '' : 'disabled'}>
-              ${inStock ? 'Add to Cart' : 'Out of stock'}
+            <button class="btn btn-block" onclick="addToCart(${product.id})" ${product.stock === 0 ? 'disabled' : ''}>
+              🛒 Add to Cart
             </button>
-          </div>`;
+          </div>
+        `;
 
-        let qty = 1;
-        const qtyEl = document.getElementById('qty');
-        document.getElementById('dec').onclick = () => {
-          qty = Math.max(1, qty - 1);
-          qtyEl.textContent = qty;
+        let currentQty = 1;
+        window.changeQty = (delta) => {
+          currentQty = Math.max(1, Math.min(product.stock, currentQty + delta));
+          document.getElementById('qty-val').textContent = currentQty;
         };
-        document.getElementById('inc').onclick = () => {
-          qty = Math.min(p.stock, qty + 1);
-          qtyEl.textContent = qty;
-        };
-        document.getElementById('add').onclick = () => {
+
+        window.addToCart = (prodId) => {
           try {
-            API.cart.add(p.id, qty);
+            API.cart.add(prodId, currentQty);
             updateCartBadge();
-            toast(`${p.name} added to cart`);
+            toast('Added to cart!');
           } catch (err) {
             toast(err.message);
           }
         };
 
-        const related = (await API.listProducts({ category: p.category }))
-          .filter(x => x.id !== p.id)
-          .slice(0, 4);
+        // Load related items
+        const allProds = await API.listProducts({ category: product.category });
+        const related = allProds.filter(p => p.id !== product.id).slice(0, 4);
         renderGrid('related', related);
+
       } catch (err) {
-        root.innerHTML = `
-          <div class="empty">
-            <span>😕</span>
-            <p>${esc(err.message)}</p>
-            <a class="btn" href="index.html">Back to shop</a>
-          </div>`;
+        document.getElementById('product').innerHTML = '<div class="empty"><span>⚠️</span><p>Product not found.</p></div>';
       }
     })();
   </script>
